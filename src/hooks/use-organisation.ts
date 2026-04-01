@@ -9,6 +9,11 @@ import {
     joinOrganisationByCode,
     updateOrganisation,
 } from '@/services/supabase/organisations'
+import {
+    readSessionCache,
+    removeSessionCache,
+    writeSessionCache,
+} from '@/lib/session-storage-cache'
 import type { Organisation } from '@/types/organisation'
 
 type UseOrganisationResult = {
@@ -38,8 +43,47 @@ let cachedOrganisation: Organisation | null = null
 let cachedApproved: boolean = true
 let cacheUserId: string | null = null
 
+function getOrganisationCacheKey(userId: string): string {
+    return `cache:organisation:${userId}`
+}
+
+type CachedOrganisationState = {
+    organisation: Organisation | null
+    approved: boolean
+}
+
+function hydrateCacheFromSession(userId: string): void {
+    const cached = readSessionCache<CachedOrganisationState>(getOrganisationCacheKey(userId))
+    if (!cached) return
+
+    cachedOrganisation = cached.organisation
+    cachedApproved = cached.approved
+    cacheUserId = userId
+}
+
+function persistOrganisationCache(userId: string, organisation: Organisation | null, approved: boolean): void {
+    cachedOrganisation = organisation
+    cachedApproved = approved
+    cacheUserId = userId
+    writeSessionCache(getOrganisationCacheKey(userId), { organisation, approved })
+}
+
+function clearOrganisationCache(userId: string | null): void {
+    if (userId) {
+        removeSessionCache(getOrganisationCacheKey(userId))
+    }
+
+    cachedOrganisation = null
+    cachedApproved = true
+    cacheUserId = null
+}
+
 export function useOrganisation(): UseOrganisationResult {
     const { user, loading: userLoading } = useCurrentUser()
+
+    if (user?.id && user.id !== cacheUserId) {
+        hydrateCacheFromSession(user.id)
+    }
 
     const isCacheValid = user?.id === cacheUserId && cachedOrganisation !== undefined
 
@@ -68,9 +112,7 @@ export function useOrganisation(): UseOrganisationResult {
 
     async function refetch() {
         if (!user) {
-            cachedOrganisation = null
-            cachedApproved = true
-            cacheUserId = null
+            clearOrganisationCache(cacheUserId)
             setOrganisation(null)
             setPendingApproval(false)
             setError(null)
@@ -82,9 +124,7 @@ export function useOrganisation(): UseOrganisationResult {
         const result = await getCurrentUserOrganisation(user.id)
 
         if (!result.error) {
-            cachedOrganisation = result.data
-            cachedApproved = result.approved
-            cacheUserId = user.id
+            persistOrganisationCache(user.id, result.data, result.approved)
         }
 
         setOrganisation(result.data)
@@ -96,15 +136,18 @@ export function useOrganisation(): UseOrganisationResult {
     useEffect(() => {
         if (userLoading) return
 
+        let cancelled = false
+
         // Serve from cache immediately if valid
         if (user?.id === cacheUserId && cachedOrganisation !== undefined) {
-            setOrganisation(cachedOrganisation)
-            setPendingApproval(!cachedApproved && cachedOrganisation !== null)
-            setLoading(false)
-            return
+            queueMicrotask(() => {
+                if (cancelled) return
+                setOrganisation(cachedOrganisation)
+                setPendingApproval(!cachedApproved && cachedOrganisation !== null)
+                setLoading(false)
+            })
+            return () => { cancelled = true }
         }
-
-        let cancelled = false
 
         const run = async () => {
             await Promise.resolve()
@@ -125,9 +168,7 @@ export function useOrganisation(): UseOrganisationResult {
 
             if (!cancelled) {
                 if (!result.error) {
-                    cachedOrganisation = result.data
-                    cachedApproved = result.approved
-                    cacheUserId = user.id
+                    persistOrganisationCache(user.id, result.data, result.approved)
                 }
                 setOrganisation(result.data)
                 setPendingApproval(!result.approved && result.data !== null)
@@ -156,9 +197,7 @@ export function useOrganisation(): UseOrganisationResult {
         })
 
         if (result.data && user) {
-            cachedOrganisation = result.data
-            cachedApproved = true
-            cacheUserId = user.id
+            persistOrganisationCache(user.id, result.data, true)
             setOrganisation(result.data)
             setPendingApproval(false)
             setError(null)
@@ -171,9 +210,7 @@ export function useOrganisation(): UseOrganisationResult {
         const result = await joinOrganisationByCode({ code: input.code })
 
         if (result.data && user) {
-            cachedOrganisation = result.data
-            cachedApproved = false
-            cacheUserId = user.id
+            persistOrganisationCache(user.id, result.data, false)
             setOrganisation(result.data)
             setPendingApproval(true)
             setError(null)
@@ -201,8 +238,7 @@ export function useOrganisation(): UseOrganisationResult {
         })
 
         if (result.data && user) {
-            cachedOrganisation = result.data
-            cacheUserId = user.id
+            persistOrganisationCache(user.id, result.data, cachedApproved)
             setOrganisation(result.data)
         }
 

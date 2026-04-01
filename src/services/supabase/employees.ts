@@ -1,5 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { emitInternalEvent } from '@/services/activity'
 
 export type OrganisationMember = {
     organisation_id: string
@@ -68,6 +69,16 @@ export async function updateOrganisationMemberRole(input: {
         .select('organisation_id,user_id,role,created_at')
         .single()
 
+    if (!error) {
+        emitInternalEvent({
+            eventType: 'organisation.member.role_changed',
+            metadata: {
+                targetUserId: input.userId,
+                role: input.role,
+            },
+        })
+    }
+
     return {
         data: (data as OrganisationMember | null) ?? null,
         error,
@@ -84,6 +95,15 @@ export async function removeOrganisationMember(input: {
         .delete()
         .eq('organisation_id', input.organisationId)
         .eq('user_id', input.userId)
+
+    if (!error) {
+        emitInternalEvent({
+            eventType: 'organisation.member.removed',
+            metadata: {
+                targetUserId: input.userId,
+            },
+        })
+    }
 
     return { data: null, error }
 }
@@ -112,6 +132,7 @@ export async function createOrganisationInvite(input: {
     email: string | null
     inviteLimit: number
 }): Promise<Result<OrganisationInvite | null>> {
+
     const supabase = createClient()
 
     // Enforce per-org active invite code limit
@@ -151,6 +172,15 @@ export async function createOrganisationInvite(input: {
             .single()
 
         if (!error) {
+            emitInternalEvent({
+                eventType: 'organisation.invite.created',
+                metadata: {
+                    role: input.role,
+                    email: input.email,
+                    usesLeft: input.usesLeft,
+                },
+            })
+
             return {
                 data: (data as OrganisationInvite | null) ?? null,
                 error: null,
@@ -176,6 +206,15 @@ export async function approveOrganisationMember(input: {
         .update({ approved: true })
         .eq('organisation_id', input.organisationId)
         .eq('user_id', input.userId)
+
+    if (!error) {
+        emitInternalEvent({
+            eventType: 'organisation.member.approved',
+            metadata: {
+                targetUserId: input.userId,
+            },
+        })
+    }
 
     return { data: null, error }
 }
@@ -206,6 +245,15 @@ export async function deleteOrganisationInvite(input: {
         .delete()
         .eq('organisation_id', input.organisationId)
         .eq('id', input.inviteId)
+
+    if (!error) {
+        emitInternalEvent({
+            eventType: 'organisation.invite.deleted',
+            metadata: {
+                inviteId: input.inviteId,
+            },
+        })
+    }
 
     return { data: null, error }
 }

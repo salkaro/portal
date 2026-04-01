@@ -38,8 +38,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
+import { IntegrationsSkeleton } from "@/components/app/integrations/integrations-skeleton";
+import {
+  SalkaroTable,
+  type SalkaroColumn,
+} from "@/components/ui/salkaro-table";
 import { useConnections } from "@/hooks/use-connections";
 import { useOrganisation } from "@/hooks/use-organisation";
 import { formatDateTime } from "@/utils/format-dates";
@@ -157,7 +160,7 @@ export function IntegrationsContent() {
   }
 
   return (
-    <section className="space-y-4 py-6">
+    <section className={`space-y-4 ${loading ? 'py-6': ''}`}>
       {connectedIntegrations.length > 0 && (
         <div className="flex items-start justify-end gap-3">
           <Button asChild size="sm" variant="outline">
@@ -167,10 +170,7 @@ export function IntegrationsContent() {
       )}
 
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Spinner className="size-4" />
-          Loading connected integrations...
-        </div>
+        <IntegrationsSkeleton />
       ) : error ? (
         <p className="text-sm text-destructive">
           Failed to load connected integrations: {error.message}
@@ -194,62 +194,93 @@ export function IntegrationsContent() {
         </div>
       ) : (
         <SalkaroTable
-          rows={connectedIntegrations.filter(Boolean) as NonNullable<typeof connectedIntegrations[number]>[]}
-          columns={[
-            {
-              key: "integration",
-              label: "Integration",
-              render: (c) => (
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={getConnectionIcon(c)}
-                    alt={`${c.definition.title} icon`}
-                    width={18}
-                    height={18}
-                    className="h-4.5 w-4.5 shrink-0 object-contain"
-                  />
-                  <span className="font-medium">{c.definition.title}</span>
-                </div>
-              ),
-              searchValue: (c) => c.definition.title,
-            },
-            {
-              key: "connection",
-              label: "Connection",
-              render: (c) => <span className="font-semibold">{getConnectionDisplayName(c)}</span>,
-              searchValue: (c) => getConnectionDisplayName(c),
-            },
-            {
-              key: "connected",
-              label: "Connected",
-              render: (c) => <span className="text-muted-foreground">{formatDateTime(c.created_at)}</span>,
-            },
-            {
-              key: "actions",
-              label: "",
-              className: "w-12 text-right",
-              render: (c) => (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label="Connection actions">
-                      <MoreHorizontalIcon />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { setRenameError(null); setPendingRename(c); setRenameValue(getConnectionDisplayName(c)); }}>
-                      <PencilIcon />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => { setDeleteError(null); setPendingDisconnect(c); }}>
-                      <Trash2Icon />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ),
-            },
-          ] satisfies SalkaroColumn<NonNullable<typeof connectedIntegrations[number]>>[]}
+          rows={
+            connectedIntegrations.filter(Boolean) as NonNullable<
+              (typeof connectedIntegrations)[number]
+            >[]
+          }
+          columns={
+            [
+              {
+                key: "integration",
+                label: "Integration",
+                render: (c) => (
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={getConnectionIcon(c)}
+                      alt={`${c.definition.title} icon`}
+                      width={18}
+                      height={18}
+                      className="h-4.5 w-4.5 shrink-0 object-contain"
+                    />
+                    <span className="font-medium">{c.definition.title}</span>
+                  </div>
+                ),
+                searchValue: (c) => c.definition.title,
+              },
+              {
+                key: "connection",
+                label: "Connection",
+                render: (c) => (
+                  <span className="font-semibold">
+                    {getConnectionDisplayName(c)}
+                  </span>
+                ),
+                searchValue: (c) => getConnectionDisplayName(c),
+              },
+              {
+                key: "connected",
+                label: "Connected",
+                render: (c) => (
+                  <span className="text-muted-foreground">
+                    {formatDateTime(c.created_at)}
+                  </span>
+                ),
+              },
+              {
+                key: "actions",
+                label: "",
+                className: "w-12 text-right",
+                render: (c) => (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Connection actions"
+                      >
+                        <MoreHorizontalIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setRenameError(null);
+                          setPendingRename(c);
+                          setRenameValue(getConnectionDisplayName(c));
+                        }}
+                      >
+                        <PencilIcon />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setDeleteError(null);
+                          setPendingDisconnect(c);
+                        }}
+                      >
+                        <Trash2Icon />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ),
+              },
+            ] satisfies SalkaroColumn<
+              NonNullable<(typeof connectedIntegrations)[number]>
+            >[]
+          }
           rowKey={(c) => c.id}
           searchable
           searchPlaceholder="Search integrations..."

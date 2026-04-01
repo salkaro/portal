@@ -14,13 +14,22 @@ import {
 
 type PageGuardProps = {
   requiredPlan: PlanTier;
+  skeleton?: ReactNode;
   children: ReactNode;
 };
 
-export function PageGuard({ requiredPlan, children }: PageGuardProps) {
+export function PageGuard({
+  requiredPlan,
+  skeleton,
+  children,
+}: PageGuardProps) {
   const { organisation, loading } = useOrganisation();
 
   if (loading) {
+    if (skeleton) {
+      return <>{skeleton}</>;
+    }
+
     return (
       <div className="flex items-center min-h-[40vh] justify-center gap-2 text-sm text-muted-foreground">
         <Spinner className="size-4" />

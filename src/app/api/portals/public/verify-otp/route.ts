@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { emitPortalEvent } from '@/services/emit-event'
 import { ServiceError } from '@/services/service-error'
 
 type VerifyOtpBody = {
@@ -57,6 +59,24 @@ export async function POST(request: NextRequest) {
 
         if (!normalizedPortal) {
             throw new ServiceError('Portal not found', 'not_found', 404)
+        }
+
+        // Resolve organisation_id for event (security definer query via service client)
+        const serviceClient = createServiceClient()
+        const { data: portalRow } = await serviceClient
+            .from('portals')
+            .select('organisation_id')
+            .eq('id', payload.portalId)
+            .maybeSingle<{ organisation_id: string }>()
+
+        if (portalRow?.organisation_id) {
+            await emitPortalEvent({
+                organisationId: portalRow.organisation_id,
+                portalId: payload.portalId,
+                eventType: 'portal.otp_verified',
+                actorType: 'external',
+                actorLabel: normalizedEmail,
+            })
         }
 
         return NextResponse.json({

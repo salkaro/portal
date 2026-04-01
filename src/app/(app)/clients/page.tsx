@@ -1,5 +1,6 @@
 import { pageMetadata } from "@/lib/metadata";
 import { PageGuard } from "@/components/guards/page-guard";
+import { ClientsSkeleton } from "@/components/app/clients/clients-skeleton";
 
 export const metadata = pageMetadata(
   "Clients",
@@ -9,7 +10,7 @@ export const metadata = pageMetadata(
 export default function ClientsPage() {
   return (
     <div className="px-4">
-      <PageGuard requiredPlan="free">
+      <PageGuard requiredPlan="free" skeleton={<ClientsSkeleton />}>
         <div />
       </PageGuard>
     </div>

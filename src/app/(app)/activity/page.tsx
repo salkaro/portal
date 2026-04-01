@@ -1,4 +1,6 @@
 import { pageMetadata } from "@/lib/metadata";
+import { ActivityContent } from "../../../components/app/activity/activity-content";
+import { ActivitySkeleton } from "@/components/app/activity/activity-skeleton";
 import { PageGuard } from "@/components/guards/page-guard";
 
 export const metadata = pageMetadata(
@@ -9,8 +11,8 @@ export const metadata = pageMetadata(
 export default function ActivityPage() {
   return (
     <div className="px-4">
-      <PageGuard requiredPlan="free">
-        <div />
+      <PageGuard requiredPlan="free" skeleton={<ActivitySkeleton />}>
+        <ActivityContent />
       </PageGuard>
     </div>
   );

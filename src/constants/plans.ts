@@ -9,6 +9,7 @@ export const FREE_PLAN_LIMITS = {
     EMPLOYEES: 3,
     INTEGRATIONS: 1,
     INVITES: 3,
+    ACTIVITY_EVENTS: 0,
 }
 
 export const PRO_PLAN_LIMITS = {
@@ -16,6 +17,7 @@ export const PRO_PLAN_LIMITS = {
     EMPLOYEES: 10,
     INTEGRATIONS: Infinity,
     INVITES: 25,
+    ACTIVITY_EVENTS: 100,
 }
 
 

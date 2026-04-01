@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { useOrganisation } from '@/hooks/use-organisation'
+import { readSessionCache, writeSessionCache } from '@/lib/session-storage-cache'
 import { getPortals } from '@/services/supabase/portals'
 import type { Portal } from '@/types/portal'
 
@@ -16,11 +17,21 @@ type UsePortalsResult = {
 // Module-level cache — survives client-side navigation, cleared on explicit refetch
 const cache = new Map<string, Portal[]>()
 
+function getPortalsCacheKey(organisationId: string): string {
+    return `cache:portals:${organisationId}`
+}
+
 export function usePortals(): UsePortalsResult {
     const { organisation, loading: organisationLoading } = useOrganisation()
     const organisationId = organisation?.id ?? null
 
-    const cached = organisationId ? (cache.get(organisationId) ?? null) : null
+    const cached = organisationId
+        ? (cache.get(organisationId) ?? readSessionCache<Portal[]>(getPortalsCacheKey(organisationId)))
+        : null
+
+    if (organisationId && cached) {
+        cache.set(organisationId, cached)
+    }
 
     const [portals, setPortals] = useState<Portal[]>(cached ?? [])
     const [loading, setLoading] = useState(cached === null)
@@ -39,6 +50,7 @@ export function usePortals(): UsePortalsResult {
 
         if (!result.error) {
             cache.set(organisationId, result.data)
+            writeSessionCache(getPortalsCacheKey(organisationId), result.data)
         }
 
         setPortals(result.data)

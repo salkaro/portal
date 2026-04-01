@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/constants/routes";
 import { PortalBoardView } from "@/components/app/portals/view/portal-board-view";
 import { Spinner } from "@/components/ui/spinner";
+import GridDots from "@/components/animations/grid-dots";
 
 type PublicPortalViewProps = {
   portalId: string;
@@ -54,7 +55,7 @@ type PortalSummary = {
 
 type EntryMode = "choose" | "email" | "code";
 
-function PortalEntryScreen() {
+function PortalEntryScreen({ preAuthCode }: { preAuthCode?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<EntryMode>("choose");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -71,7 +72,14 @@ function PortalEntryScreen() {
   const [devOtp, setDevOtp] = useState<string | null>(null);
 
   // Code path state
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(preAuthCode ?? "");
+
+  useEffect(() => {
+    if (preAuthCode) {
+      void handleVerifyCode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function reset() {
     setMode("choose");
@@ -161,6 +169,7 @@ function PortalEntryScreen() {
   }
 
   return (
+    <GridDots className="min-h-screen">
     <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -349,6 +358,7 @@ function PortalEntryScreen() {
         </CardContent>
       </Card>
     </main>
+    </GridDots>
   );
 }
 
@@ -484,15 +494,18 @@ export function PublicPortalView({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="size-4" />
-        Finding portal...
-      </div>
+      <GridDots className="min-h-screen">
+        <div className="flex min-h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Spinner className="size-4" />
+          Finding portal...
+        </div>
+      </GridDots>
     );
   }
 
   if (!portal) {
     return (
+      <GridDots className="min-h-screen">
       <main className="flex min-h-screen items-center justify-center p-6">
         <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
           <div className="flex size-14 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
@@ -509,11 +522,13 @@ export function PublicPortalView({
           </Button>
         </div>
       </main>
+      </GridDots>
     );
   }
 
   if (!isAuthorized) {
     return (
+      <GridDots className="min-h-screen">
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center p-6">
         <Card className="w-full max-w-lg">
           <CardHeader>
@@ -615,6 +630,7 @@ export function PublicPortalView({
           </CardContent>
         </Card>
       </main>
+      </GridDots>
     );
   }
 

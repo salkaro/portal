@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { useOrganisation } from '@/hooks/use-organisation'
+import { readSessionCache, writeSessionCache } from '@/lib/session-storage-cache'
 import {
     getConnectedAccounts,
     type ConnectedAccount,
@@ -15,11 +16,25 @@ type UseConnectionsResult = {
     refetch: () => Promise<void>
 }
 
+const cache = new Map<string, ConnectedAccount[]>()
+
+function getConnectionsCacheKey(organisationId: string): string {
+    return `cache:connections:${organisationId}`
+}
+
 export function useConnections(): UseConnectionsResult {
     const { organisation, loading: organisationLoading } = useOrganisation()
     const organisationId = organisation?.id ?? null
-    const [connections, setConnections] = useState<ConnectedAccount[]>([])
-    const [loading, setLoading] = useState(true)
+    const cached = organisationId
+        ? (cache.get(organisationId) ?? readSessionCache<ConnectedAccount[]>(getConnectionsCacheKey(organisationId)))
+        : null
+
+    if (organisationId && cached) {
+        cache.set(organisationId, cached)
+    }
+
+    const [connections, setConnections] = useState<ConnectedAccount[]>(cached ?? [])
+    const [loading, setLoading] = useState(cached === null)
     const [error, setError] = useState<PostgrestError | null>(null)
 
     const refetch = useCallback(async () => {
@@ -32,6 +47,12 @@ export function useConnections(): UseConnectionsResult {
 
         setLoading(true)
         const result = await getConnectedAccounts(organisationId)
+
+        if (!result.error) {
+            cache.set(organisationId, result.data)
+            writeSessionCache(getConnectionsCacheKey(organisationId), result.data)
+        }
+
         setConnections(result.data)
         setError(result.error)
         setLoading(false)
@@ -39,6 +60,12 @@ export function useConnections(): UseConnectionsResult {
 
     useEffect(() => {
         if (organisationLoading) {
+            return
+        }
+
+        if (organisationId && cache.has(organisationId)) {
+            setConnections(cache.get(organisationId) ?? [])
+            setLoading(false)
             return
         }
 

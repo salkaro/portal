@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { AvatarCropDialog } from "@/components/app/settings/general/avatar-crop-dialog";
+import { GeneralSettingsSkeleton } from "@/components/app/settings/general/general-settings-skeleton";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { updateCurrentUserProfile } from "@/services/auth";
 import { uploadAvatarDataUrl } from "@/services/supabase/avatar-storage";
@@ -225,12 +225,7 @@ export function GeneralSettingsContent() {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center gap-2 text-xs text-muted-foreground">
-        <Spinner className="size-3.5" />
-        Loading account information...
-      </div>
-    );
+    return <GeneralSettingsSkeleton />;
   }
 
   return (

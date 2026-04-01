@@ -8,6 +8,7 @@ import {
     type PortalImportConfig,
 } from '@/types/portal'
 import { withRandomSuffix } from '@/utils/string'
+import { emitInternalEvent } from '@/services/activity'
 
 type PortalsResult = {
     data: Portal[]
@@ -79,6 +80,28 @@ function normalizeEmailList(emails: string[]): string[] {
                 .map((email) => email.trim().toLowerCase())
                 .filter((email) => email.length > 0)
         )
+    ).sort((left, right) => left.localeCompare(right))
+}
+
+function arraysEqual(valuesA: string[], valuesB: string[]): boolean {
+    if (valuesA.length !== valuesB.length) return false
+    return valuesA.every((value, index) => value === valuesB[index])
+}
+
+function isSameImportConfig(current: PortalImportConfig, next: PortalImportConfig): boolean {
+    return (
+        current.boardId === next.boardId &&
+        current.boardName === next.boardName &&
+        arraysEqual(current.selectedColumnIds, next.selectedColumnIds)
+    )
+}
+
+function isSameCustomization(current: PortalCustomization, next: PortalCustomization): boolean {
+    return (
+        (current.tagline ?? null) === (next.tagline ?? null) &&
+        current.showStatusSection === next.showStatusSection &&
+        current.showTimelineSection === next.showTimelineSection &&
+        current.showOwnersSection === next.showOwnersSection
     )
 }
 
@@ -125,6 +148,12 @@ export async function createPortal(input: CreatePortalInput): Promise<CreatePort
         return { data: null, error }
     }
 
+    emitInternalEvent({
+        portalId: data.id,
+        eventType: 'portal.created',
+        metadata: { portalName: data.name },
+    })
+
     return { data, error: null }
 }
 
@@ -134,11 +163,27 @@ export async function updatePortalName(input: {
     name: string
 }): Promise<UpdatePortalNameResult> {
     const supabase = createClient()
+    const nextName = input.name.trim()
+
+    const { data: currentPortal, error: currentError } = await supabase
+        .from('portals')
+        .select(PORTAL_SELECT)
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .single<Portal>()
+
+    if (currentError) {
+        return { data: null, error: currentError }
+    }
+
+    if (currentPortal.name === nextName) {
+        return { data: currentPortal, error: null }
+    }
 
     const { data, error } = await supabase
         .from('portals')
         .update({
-            name: input.name.trim(),
+            name: nextName,
         })
         .eq('organisation_id', input.organisationId)
         .eq('id', input.portalId)
@@ -149,12 +194,19 @@ export async function updatePortalName(input: {
         return { data: null, error }
     }
 
+    emitInternalEvent({
+        portalId: data.id,
+        eventType: 'portal.updated',
+        metadata: { portalName: data.name },
+    })
+
     return { data, error: null }
 }
 
 export async function deletePortal(input: {
     organisationId: string
     portalId: string
+    portalName?: string
 }): Promise<DeletePortalResult> {
     const supabase = createClient()
 
@@ -163,6 +215,14 @@ export async function deletePortal(input: {
         .delete()
         .eq('organisation_id', input.organisationId)
         .eq('id', input.portalId)
+
+    if (!error) {
+        emitInternalEvent({
+            portalId: input.portalId,
+            eventType: 'portal.deleted',
+            metadata: input.portalName ? { portalName: input.portalName } : null,
+        })
+    }
 
     return { error }
 }
@@ -174,6 +234,19 @@ export async function updatePortalStatus(input: {
 }): Promise<{ data: Portal | null; error: PostgrestError | null }> {
     const supabase = createClient()
 
+    const { data: currentPortal, error: currentError } = await supabase
+        .from('portals')
+        .select(PORTAL_SELECT)
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .single<Portal>()
+
+    if (currentError) return { data: null, error: currentError }
+
+    if (currentPortal.status === input.status) {
+        return { data: currentPortal, error: null }
+    }
+
     const { data, error } = await supabase
         .from('portals')
         .update({ status: input.status })
@@ -183,6 +256,13 @@ export async function updatePortalStatus(input: {
         .single<Portal>()
 
     if (error) return { data: null, error }
+
+    emitInternalEvent({
+        portalId: input.portalId,
+        eventType: 'portal.status_changed',
+        metadata: { portalName: data.name, status: input.status },
+    })
+
     return { data, error: null }
 }
 
@@ -193,6 +273,19 @@ export async function updatePortalImportConfig(input: {
 }): Promise<{ data: Portal | null; error: PostgrestError | null }> {
     const supabase = createClient()
 
+    const { data: currentPortal, error: currentError } = await supabase
+        .from('portals')
+        .select(PORTAL_SELECT)
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .single<Portal>()
+
+    if (currentError) return { data: null, error: currentError }
+
+    if (isSameImportConfig(currentPortal.import_config, input.importConfig)) {
+        return { data: currentPortal, error: null }
+    }
+
     const { data, error } = await supabase
         .from('portals')
         .update({ import_config: input.importConfig })
@@ -202,6 +295,16 @@ export async function updatePortalImportConfig(input: {
         .single<Portal>()
 
     if (error) return { data: null, error }
+
+    emitInternalEvent({
+        portalId: data.id,
+        eventType: 'portal.fields_updated',
+        metadata: {
+            portalName: data.name,
+            selectedFieldsCount: input.importConfig.selectedColumnIds.length,
+        },
+    })
+
     return { data, error: null }
 }
 
@@ -212,6 +315,19 @@ export async function updatePortalCustomization(input: {
 }): Promise<{ data: Portal | null; error: PostgrestError | null }> {
     const supabase = createClient()
 
+    const { data: currentPortal, error: currentError } = await supabase
+        .from('portals')
+        .select(PORTAL_SELECT)
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .single<Portal>()
+
+    if (currentError) return { data: null, error: currentError }
+
+    if (isSameCustomization(currentPortal.customization, input.customization)) {
+        return { data: currentPortal, error: null }
+    }
+
     const { data, error } = await supabase
         .from('portals')
         .update({ customization: input.customization })
@@ -221,11 +337,34 @@ export async function updatePortalCustomization(input: {
         .single<Portal>()
 
     if (error) return { data: null, error }
+
+    emitInternalEvent({
+        portalId: data.id,
+        eventType: 'portal.sections_updated',
+        metadata: {
+            portalName: data.name,
+            showStatusSection: input.customization.showStatusSection,
+            showTimelineSection: input.customization.showTimelineSection,
+            showOwnersSection: input.customization.showOwnersSection,
+        },
+    })
+
     return { data, error: null }
 }
 
 export async function updatePortalAccess(input: UpdatePortalAccessInput): Promise<UpdatePortalAccessResult> {
     const supabase = createClient()
+
+    const { data: currentPortal, error: currentError } = await supabase
+        .from('portals')
+        .select(PORTAL_SELECT)
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .single<Portal>()
+
+    if (currentError) {
+        return { data: null, error: currentError }
+    }
 
     const updatePayload: {
         access_type: PortalAccessType
@@ -245,6 +384,15 @@ export async function updatePortalAccess(input: UpdatePortalAccessInput): Promis
         updatePayload.access_code_hash = await hashPortalAccessCode(input.code)
     }
 
+    const isUnchanged =
+        currentPortal.access_type === updatePayload.access_type &&
+        arraysEqual(currentPortal.access_email_allowlist, updatePayload.access_email_allowlist) &&
+        currentPortal.access_code_hash === updatePayload.access_code_hash
+
+    if (isUnchanged) {
+        return { data: currentPortal, error: null }
+    }
+
     const { data, error } = await supabase
         .from('portals')
         .update(updatePayload)
@@ -256,6 +404,16 @@ export async function updatePortalAccess(input: UpdatePortalAccessInput): Promis
     if (error) {
         return { data: null, error }
     }
+
+    emitInternalEvent({
+        portalId: data.id,
+        eventType: 'portal.access_updated',
+        metadata: {
+            portalName: data.name,
+            accessType: input.accessType,
+            allowlistCount: updatePayload.access_email_allowlist.length,
+        },
+    })
 
     return { data, error: null }
 }

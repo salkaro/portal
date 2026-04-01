@@ -1,6 +1,8 @@
 import { createHash, randomInt } from 'node:crypto'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { emitPortalEvent } from '@/services/emit-event'
 import { ServiceError } from '@/services/service-error'
 
 type RequestOtpBody = {
@@ -49,6 +51,23 @@ export async function POST(request: NextRequest) {
 
         if (!createdOtpId) {
             throw new ServiceError('OTP could not be persisted', 'database_error', 500)
+        }
+
+        const serviceClient = createServiceClient()
+        const { data: portalRow } = await serviceClient
+            .from('portals')
+            .select('organisation_id')
+            .eq('id', payload.portalId)
+            .maybeSingle<{ organisation_id: string }>()
+
+        if (portalRow?.organisation_id) {
+            await emitPortalEvent({
+                organisationId: portalRow.organisation_id,
+                portalId: payload.portalId,
+                eventType: 'portal.otp_requested',
+                actorType: 'external',
+                actorLabel: normalizedEmail,
+            })
         }
 
         const responsePayload: { message: string; devOtp?: string; devOtpId?: string } = {

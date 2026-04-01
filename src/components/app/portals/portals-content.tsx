@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useConnections } from "@/hooks/use-connections";
 import { useOrganisation } from "@/hooks/use-organisation";
 import { usePortals } from "@/hooks/use-portals";
@@ -11,6 +14,7 @@ import { PLAN_LIMITS } from "@/constants/plans";
 import { PortalsEmptyState } from "@/components/app/portals/portals-empty-state";
 import { PortalsList } from "@/components/app/portals/portals-list";
 import { PortalCreateDialog } from "@/components/app/portals/portal-create-dialog";
+import { PortalsSkeleton } from "@/components/app/portals/portals-skeleton";
 import type { PlanTier } from "@/lib/plans";
 
 export function PortalsContent() {
@@ -44,12 +48,7 @@ export function PortalsContent() {
   }
 
   if (connectionsLoading || portalsLoading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="size-4" />
-        Loading portals...
-      </div>
-    );
+    return <PortalsSkeleton />;
   }
 
   if (connectionsError) {
@@ -79,10 +78,14 @@ export function PortalsContent() {
                   <Button disabled>Create portal</Button>
                 </span>
               </TooltipTrigger>
-              <TooltipContent>{limitLabel} Upgrade to create more.</TooltipContent>
+              <TooltipContent>
+                {limitLabel} Upgrade to create more.
+              </TooltipContent>
             </Tooltip>
           ) : (
-            <Button onClick={() => setCreateDialogOpen(true)}>Create portal</Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              Create portal
+            </Button>
           )}
         </div>
       )}

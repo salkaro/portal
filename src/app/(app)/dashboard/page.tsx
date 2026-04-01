@@ -1,5 +1,6 @@
 import { pageMetadata } from "@/lib/metadata";
 import { PageGuard } from "@/components/guards/page-guard";
+import { DashboardSkeleton } from "@/components/app/dashboard/dashboard-skeleton";
 
 export const metadata = pageMetadata(
   "Dashboard",
@@ -9,7 +10,7 @@ export const metadata = pageMetadata(
 export default function DashboardPage() {
   return (
     <div className="px-4">
-      <PageGuard requiredPlan="free">
+      <PageGuard requiredPlan="free" skeleton={<DashboardSkeleton />}>
         <div />
       </PageGuard>
     </div>

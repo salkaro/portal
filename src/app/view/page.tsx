@@ -8,7 +8,7 @@ export default async function ViewPage({ searchParams }: ViewPageProps) {
   const { portal_id, code } = await searchParams;
 
   if (!portal_id) {
-    return <PortalEntryScreen />;
+    return <PortalEntryScreen preAuthCode={code} />;
   }
 
   return <PublicPortalView portalId={portal_id} preAuthCode={code} />;

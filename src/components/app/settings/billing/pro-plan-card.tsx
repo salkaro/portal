@@ -14,6 +14,7 @@ const FEATURES = [
     "Unlimited integrations",
     "Custom branding",
     "25 invite slots",
+    "100 activity events",
 ];
 
 type ProPlanCardProps = {

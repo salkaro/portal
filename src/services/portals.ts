@@ -32,6 +32,12 @@ type PublicPortalResponse = {
     hasInstantAccess: boolean
 }
 
+// De-duplicate concurrent board fetches for the same portal.
+// This prevents duplicate activity events when effects are invoked twice.
+const boardDataInFlight = new Map<string, Promise<PortalBoardData>>()
+const verifyCodeInFlight = new Map<string, Promise<PublicPortalResponse>>()
+const verifyOtpInFlight = new Map<string, Promise<PublicPortalResponse>>()
+
 export async function findPortalsByEmail(email: string): Promise<{ portals: PortalSummary[] }> {
     const response = await fetch('/api/portals/public/find-by-email', {
         method: 'POST',
@@ -138,61 +144,141 @@ export async function verifyPortalOtp(input: {
     email: string
     otp: string
 }): Promise<PublicPortalResponse> {
-    const response = await fetch('/api/portals/public/verify-otp', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-    })
+    const key = `${input.portalId}:${input.email.toLowerCase().trim()}:${input.otp.trim()}`
+    const existing = verifyOtpInFlight.get(key)
 
-    if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
-        throw new ServiceError(
-            errorPayload?.message ?? 'Invalid OTP',
-            'upstream_error',
-            response.status
-        )
+    if (existing) {
+        return existing
     }
 
-    return (await response.json()) as PublicPortalResponse
+    const request = (async () => {
+        const response = await fetch('/api/portals/public/verify-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(input),
+        })
+
+        if (!response.ok) {
+            const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
+            throw new ServiceError(
+                errorPayload?.message ?? 'Invalid OTP',
+                'upstream_error',
+                response.status
+            )
+        }
+
+        return (await response.json()) as PublicPortalResponse
+    })()
+
+    verifyOtpInFlight.set(key, request)
+
+    try {
+        return await request
+    } finally {
+        verifyOtpInFlight.delete(key)
+    }
 }
 
 export async function verifyPortalCode(input: {
     portalId: string
     code: string
 }): Promise<PublicPortalResponse> {
-    const response = await fetch('/api/portals/public/verify-code', {
+    const markerKey = `portal-code-verified:${input.portalId}:${input.code.trim().toUpperCase()}`
+    const suppressEvent = typeof window !== 'undefined' && window.sessionStorage.getItem(markerKey) === '1'
+
+    const key = `${input.portalId}:${input.code.trim().toUpperCase()}`
+    const existing = verifyCodeInFlight.get(key)
+
+    if (existing) {
+        return existing
+    }
+
+    const request = (async () => {
+        const response = await fetch('/api/portals/public/verify-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...input,
+                suppressEvent,
+            }),
+        })
+
+        if (!response.ok) {
+            const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
+            throw new ServiceError(
+                errorPayload?.message ?? 'Invalid code',
+                'upstream_error',
+                response.status
+            )
+        }
+
+        const payload = (await response.json()) as PublicPortalResponse
+
+        if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem(markerKey, '1')
+        }
+
+        return payload
+    })()
+
+    verifyCodeInFlight.set(key, request)
+
+    try {
+        return await request
+    } finally {
+        verifyCodeInFlight.delete(key)
+    }
+}
+
+export async function fetchPortalBoardData(portalId: string): Promise<PortalBoardData> {
+    const existing = boardDataInFlight.get(portalId)
+    if (existing) {
+        return existing
+    }
+
+    const request = (async () => {
+        const response = await fetch(`/api/portals/public/board-data?portal_id=${encodeURIComponent(portalId)}`)
+
+        if (!response.ok) {
+            const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
+            throw new ServiceError(
+                errorPayload?.message ?? 'Unable to load portal data',
+                'upstream_error',
+                response.status
+            )
+        }
+
+        return (await response.json()) as PortalBoardData
+    })()
+
+    boardDataInFlight.set(portalId, request)
+
+    try {
+        return await request
+    } finally {
+        boardDataInFlight.delete(portalId)
+    }
+}
+
+export async function trackPortalPdfExport(portalId: string): Promise<void> {
+    const response = await fetch('/api/portals/public/export-pdf', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ portalId }),
     })
 
     if (!response.ok) {
         const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
         throw new ServiceError(
-            errorPayload?.message ?? 'Invalid code',
+            errorPayload?.message ?? 'Unable to track PDF export',
             'upstream_error',
             response.status
         )
     }
-
-    return (await response.json()) as PublicPortalResponse
-}
-
-export async function fetchPortalBoardData(portalId: string): Promise<PortalBoardData> {
-    const response = await fetch(`/api/portals/public/board-data?portal_id=${encodeURIComponent(portalId)}`)
-
-    if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
-        throw new ServiceError(
-            errorPayload?.message ?? 'Unable to load portal data',
-            'upstream_error',
-            response.status
-        )
-    }
-
-    return (await response.json()) as PortalBoardData
 }
