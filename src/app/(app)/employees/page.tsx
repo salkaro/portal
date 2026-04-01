@@ -1,4 +1,5 @@
 import { pageMetadata } from "@/lib/metadata";
+import { PageGuard } from "@/components/guards/page-guard";
 import { EmployeesContent } from "../../../components/app/employees/employees-content";
 
 export const metadata = pageMetadata(
@@ -9,7 +10,9 @@ export const metadata = pageMetadata(
 export default function EmployeesPage() {
   return (
     <div className="px-4">
-      <EmployeesContent />
+      <PageGuard requiredPlan="free">
+        <EmployeesContent />
+      </PageGuard>
     </div>
   );
 }

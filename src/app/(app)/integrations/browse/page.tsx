@@ -1,5 +1,6 @@
-import { IntegrationsBrowseContent } from "@/components/app/integrations/integrations-browse-content";
 import { pageMetadata } from "@/lib/metadata";
+import { PageGuard } from "@/components/guards/page-guard";
+import { IntegrationsBrowseContent } from "@/components/app/integrations/integrations-browse-content";
 
 export const metadata = pageMetadata(
   "Browse Integrations",
@@ -9,7 +10,9 @@ export const metadata = pageMetadata(
 export default function IntegrationsBrowsePage() {
   return (
     <div className="px-4">
-      <IntegrationsBrowseContent />
+      <PageGuard requiredPlan="free">
+        <IntegrationsBrowseContent />
+      </PageGuard>
     </div>
   );
 }

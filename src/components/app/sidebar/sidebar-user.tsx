@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   ChevronsUpDownIcon,
   UserIcon,
@@ -25,7 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { handleSignOut } from "@/lib/sign-out";
-import { ROUTES, SETTINGS_ROUTES } from "@/constants/routes";
+import { SETTINGS_ROUTES } from "@/constants/routes";
 
 function getInitials(
   name: string | null | undefined,
@@ -43,7 +42,6 @@ function getInitials(
 export function SidebarUser() {
   const { user } = useCurrentUser();
   const { isMobile } = useSidebar();
-  const router = useRouter();
 
   const fullName = user?.user_metadata?.full_name as string | undefined;
   const email = user?.email;
@@ -52,7 +50,6 @@ export function SidebarUser() {
 
   async function onSignOut() {
     await handleSignOut(user?.id);
-    router.push(ROUTES.LOGIN);
   }
 
   return (

@@ -5,13 +5,26 @@ export const PLANS = {
 
 
 export const FREE_PLAN_LIMITS = {
-    PORTALS: 1,
-    EMPLOYEES: 2,
+    PORTALS: 2,
+    EMPLOYEES: 3,
+    INTEGRATIONS: 1,
+    INVITES: 3,
 }
 
 export const PRO_PLAN_LIMITS = {
-    PORTALS: 5,
-    EMPLOYEES: Infinity,
+    PORTALS: Infinity,
+    EMPLOYEES: 10,
+    INTEGRATIONS: Infinity,
+    INVITES: 25,
+}
+
+
+export const FREE_PLAN_FEATURES = {
+    custom_branding: false,
+}
+
+export const PRO_PLAN_FEATURES = {
+    custom_branding: true,
 }
 
 

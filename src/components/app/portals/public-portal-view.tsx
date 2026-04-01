@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, KeyRound, Link2, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2, Mail, ShieldOffIcon } from "lucide-react";
 import type { PortalAccessType } from "@/types/portal";
 import {
   fetchPublicPortal,
@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/constants/routes";
+import { PortalBoardView } from "@/components/app/portals/view/portal-board-view";
+import { Spinner } from "@/components/ui/spinner";
 
 type PublicPortalViewProps = {
   portalId: string;
@@ -60,7 +62,9 @@ function PortalEntryScreen() {
 
   // Email path state
   const [email, setEmail] = useState("");
-  const [matchedPortals, setMatchedPortals] = useState<PortalSummary[] | null>(null);
+  const [matchedPortals, setMatchedPortals] = useState<PortalSummary[] | null>(
+    null,
+  );
   const [selectedPortalId, setSelectedPortalId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -93,7 +97,11 @@ function PortalEntryScreen() {
         setSelectedPortalId(portals[0].id);
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "No portals found for this email");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "No portals found for this email",
+      );
     } finally {
       setLoading(false);
     }
@@ -104,11 +112,16 @@ function PortalEntryScreen() {
     setErrorMessage(null);
     setLoading(true);
     try {
-      const payload = await requestPortalOtp({ portalId: selectedPortalId, email });
+      const payload = await requestPortalOtp({
+        portalId: selectedPortalId,
+        email,
+      });
       setOtpSent(true);
       setDevOtp(payload.devOtp ?? null);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to send OTP");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to send OTP",
+      );
     } finally {
       setLoading(false);
     }
@@ -135,9 +148,13 @@ function PortalEntryScreen() {
     setLoading(true);
     try {
       const { portal } = await findPortalByCode(code);
-      router.push(`${ROUTES.VIEW}?portal_id=${portal.id}&code=${encodeURIComponent(code)}`);
+      router.push(
+        `${ROUTES.VIEW}?portal_id=${portal.id}&code=${encodeURIComponent(code)}`,
+      );
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Invalid access code");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Invalid access code",
+      );
     } finally {
       setLoading(false);
     }
@@ -152,8 +169,8 @@ function PortalEntryScreen() {
             {mode === "choose"
               ? "How would you like to access your portal?"
               : mode === "email"
-              ? "Enter your email to receive a one-time passcode"
-              : "Enter the access code provided by the portal owner"}
+                ? "Enter your email to receive a one-time passcode"
+                : "Enter the access code provided by the portal owner"}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -185,11 +202,14 @@ function PortalEntryScreen() {
               {!matchedPortals ? (
                 <>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Email address</label>
+                    <label className="font-medium">Email address</label>
                     <Input
                       type="email"
                       value={email}
-                      onChange={(e) => { setEmail(e.target.value); setErrorMessage(null); }}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrorMessage(null);
+                      }}
                       placeholder="you@company.com"
                     />
                   </div>
@@ -199,7 +219,11 @@ function PortalEntryScreen() {
                     disabled={loading || email.trim().length === 0}
                     onClick={handleFindByEmail}
                   >
-                    {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Mail className="mr-2 size-4" />}
+                    {loading ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <Mail className="mr-2 size-4" />
+                    )}
                     Continue
                   </Button>
                 </>
@@ -225,7 +249,8 @@ function PortalEntryScreen() {
               ) : !otpSent ? (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    Send a one-time passcode to <span className="font-medium">{email}</span>
+                    Send a one-time passcode to{" "}
+                    <span className="font-medium">{email}</span>
                   </p>
                   <Button
                     type="button"
@@ -233,17 +258,26 @@ function PortalEntryScreen() {
                     disabled={loading}
                     onClick={handleSendOtp}
                   >
-                    {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Mail className="mr-2 size-4" />}
+                    {loading ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <Mail className="mr-2 size-4" />
+                    )}
                     Send OTP
                   </Button>
                 </>
               ) : (
                 <>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">One-time passcode</label>
+                    <label className="text-sm font-medium">
+                      One-time passcode
+                    </label>
                     <Input
                       value={otp}
-                      onChange={(e) => { setOtp(e.target.value); setErrorMessage(null); }}
+                      onChange={(e) => {
+                        setOtp(e.target.value);
+                        setErrorMessage(null);
+                      }}
                       placeholder="6-digit code"
                     />
                     {devOtp ? (
@@ -258,7 +292,11 @@ function PortalEntryScreen() {
                     disabled={loading || otp.trim().length === 0}
                     onClick={handleVerifyOtp}
                   >
-                    {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <CheckCircle2 className="mr-2 size-4" />}
+                    {loading ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-2 size-4" />
+                    )}
                     Verify OTP
                   </Button>
                 </>
@@ -269,10 +307,13 @@ function PortalEntryScreen() {
           {mode === "code" && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-sm font-medium">Access code</label>
+                <label className="font-medium">Access code</label>
                 <Input
                   value={code}
-                  onChange={(e) => { setCode(e.target.value); setErrorMessage(null); }}
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    setErrorMessage(null);
+                  }}
                   placeholder="Enter your access code"
                 />
               </div>
@@ -282,7 +323,11 @@ function PortalEntryScreen() {
                 disabled={loading || code.trim().length === 0}
                 onClick={handleVerifyCode}
               >
-                {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <KeyRound className="mr-2 size-4" />}
+                {loading ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <KeyRound className="mr-2 size-4" />
+                )}
                 Access portal
               </Button>
             </div>
@@ -311,7 +356,10 @@ function PortalEntryScreen() {
 // Portal view (with portal_id)
 // ------------------------------------------------------------------
 
-export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProps) {
+export function PublicPortalView({
+  portalId,
+  preAuthCode,
+}: PublicPortalViewProps) {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [portal, setPortal] = useState<PortalPayload | null>(null);
@@ -333,7 +381,10 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
 
       try {
         if (preAuthCode) {
-          const payload = await verifyPortalCode({ portalId, code: preAuthCode });
+          const payload = await verifyPortalCode({
+            portalId,
+            code: preAuthCode,
+          });
           if (cancelled) return;
           setPortal(payload);
           setIsAuthorized(true);
@@ -345,15 +396,28 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
         }
       } catch (error) {
         if (cancelled) return;
-        setErrorMessage(error instanceof Error ? error.message : "Unable to load portal");
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to load portal",
+        );
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
     void loadPortal();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [portalId, preAuthCode]);
+
+  useEffect(() => {
+    if (portal?.name) {
+      document.title = portal.name;
+      return () => {
+        document.title = "Portal";
+      };
+    }
+  }, [portal?.name]);
 
   const accessLabel = useMemo(() => {
     if (!portal) return "";
@@ -371,7 +435,9 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
       setOtpSent(true);
       setDevOtp(payload.devOtp ?? null);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to send OTP");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to send OTP",
+      );
     } finally {
       setVerifying(false);
     }
@@ -382,7 +448,11 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
     setVerifying(true);
     setErrorMessage(null);
     try {
-      const payload = await verifyPortalOtp({ portalId: portal.id, email, otp });
+      const payload = await verifyPortalOtp({
+        portalId: portal.id,
+        email,
+        otp,
+      });
       setPortal(payload);
       setIsAuthorized(true);
     } catch (error) {
@@ -397,11 +467,16 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
     setVerifying(true);
     setErrorMessage(null);
     try {
-      const payload = await verifyPortalCode({ portalId: portal.id, code: accessCode });
+      const payload = await verifyPortalCode({
+        portalId: portal.id,
+        code: accessCode,
+      });
       setPortal(payload);
       setIsAuthorized(true);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Invalid access code");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Invalid access code",
+      );
     } finally {
       setVerifying(false);
     }
@@ -409,26 +484,30 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
 
   if (loading) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center p-6">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          Loading portal...
-        </div>
-      </main>
+      <div className="flex min-h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-4" />
+        Finding portal...
+      </div>
     );
   }
 
   if (!portal) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center p-6">
-        <Card className="w-full max-w-lg">
-          <CardHeader>
-            <CardTitle>Unable to open portal</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            {errorMessage ?? "This portal may not exist or is not accessible."}
-          </CardContent>
-        </Card>
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
+            <ShieldOffIcon className="size-6" />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold text-foreground">Unable to open portal</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {errorMessage ?? "This portal may not exist or is not accessible."}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href={ROUTES.VIEW}>Try a different code</a>
+          </Button>
+        </div>
       </main>
     );
   }
@@ -461,14 +540,20 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
                   disabled={verifying || email.trim().length === 0}
                   className="w-full"
                 >
-                  {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Mail className="mr-2 size-4" />}
+                  {verifying ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <Mail className="mr-2 size-4" />
+                  )}
                   Send OTP
                 </Button>
 
                 {otpSent ? (
                   <div className="space-y-3 rounded-md border p-3">
                     <div className="space-y-1">
-                      <label className="text-sm font-medium">One-time passcode</label>
+                      <label className="text-sm font-medium">
+                        One-time passcode
+                      </label>
                       <Input
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
@@ -486,7 +571,11 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
                       disabled={verifying || otp.trim().length === 0}
                       className="w-full"
                     >
-                      {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : <CheckCircle2 className="mr-2 size-4" />}
+                      {verifying ? (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="mr-2 size-4" />
+                      )}
                       Verify OTP
                     </Button>
                   </div>
@@ -510,7 +599,11 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
                   disabled={verifying || accessCode.trim().length === 0}
                   className="w-full"
                 >
-                  {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : <KeyRound className="mr-2 size-4" />}
+                  {verifying ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="mr-2 size-4" />
+                  )}
                   Verify code
                 </Button>
               </div>
@@ -526,44 +619,12 @@ export function PublicPortalView({ portalId, preAuthCode }: PublicPortalViewProp
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-4xl space-y-6 p-6">
-      <header className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link2 className="size-4" />
-          Shared portal
-        </div>
-        <h1 className="text-2xl font-semibold">{portal.name}</h1>
-        {portal.customization?.tagline ? (
-          <p className="text-sm text-muted-foreground">{portal.customization.tagline}</p>
-        ) : null}
-      </header>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Imported source</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div>
-            <span className="font-medium">Board:</span>{" "}
-            {portal.import_config?.boardName ?? "Unavailable"}
-          </div>
-          <div>
-            <span className="font-medium">Selected fields:</span>{" "}
-            {portal.import_config?.selectedColumnIds.length ?? 0}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Enabled sections</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-          <div>Status: {portal.customization?.showStatusSection ? "On" : "Off"}</div>
-          <div>Timeline: {portal.customization?.showTimelineSection ? "On" : "Off"}</div>
-          <div>Owners: {portal.customization?.showOwnersSection ? "On" : "Off"}</div>
-        </CardContent>
-      </Card>
+    <main className="mx-auto min-h-screen w-full max-w-5xl p-6">
+      <PortalBoardView
+        portalId={portal.id}
+        portalName={portal.name}
+        customization={portal.customization ?? null}
+      />
     </main>
   );
 }

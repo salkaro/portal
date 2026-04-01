@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { CameraIcon } from "lucide-react";
+import { limitInput } from "@/utils/string";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,7 @@ export function OrganisationSettingsContent() {
 
   if (loading || userLoading) {
     return (
-      <div className="flex items-center justify-center min-h-1/3 gap-2 text-xs text-muted-foreground">
+      <div className="flex min-h-[40vh] items-center justify-center gap-2 text-xs text-muted-foreground">
         <Spinner className="size-3.5" />
         Loading organisation...
       </div>
@@ -261,7 +262,7 @@ export function OrganisationSettingsContent() {
             id="organisation-name"
             value={name}
             onChange={(event) => {
-              setNameDraft(event.target.value);
+              setNameDraft(limitInput(event.target.value, 64));
               setHasEditedName(true);
               setSaveError("");
             }}

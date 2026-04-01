@@ -5,14 +5,7 @@ import { CreditCardIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { SalkaroTable } from "@/components/ui/salkaro-table";
 import { PLANS } from "@/constants/plans";
 import { SETTINGS_ROUTES } from "@/constants/routes";
 import { getCurrentUserPlanFromDatabase, type PlanTier } from "@/lib/plans";
@@ -91,36 +84,17 @@ export function BillingContent() {
           <p className="text-xs text-muted-foreground">
             Recent subscription invoices and charges.
           </p>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {PAYMENT_HISTORY.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-muted-foreground">
-                    No payment history available yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                PAYMENT_HISTORY.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.id}</TableCell>
-                    <TableCell>{payment.date}</TableCell>
-                    <TableCell>{payment.amount}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{payment.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <SalkaroTable
+            rows={PAYMENT_HISTORY}
+            rowKey={(p) => p.id}
+            emptyMessage="No payment history available yet."
+            columns={[
+              { key: "id", label: "Invoice", render: (p) => <span className="font-medium">{p.id}</span> },
+              { key: "date", label: "Date", render: (p) => p.date },
+              { key: "amount", label: "Amount", render: (p) => p.amount },
+              { key: "status", label: "Status", render: (p) => <Badge variant="outline">{p.status}</Badge> },
+            ]}
+          />
         </div>
       )}
     </section>

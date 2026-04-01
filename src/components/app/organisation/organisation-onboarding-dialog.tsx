@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { limitInput } from "@/utils/string";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -138,7 +139,7 @@ export function OrganisationOnboardingDialog() {
               <Input
                 id="create-organisation-name"
                 value={organisationName}
-                onChange={(event) => setOrganisationName(event.target.value)}
+                onChange={(event) => setOrganisationName(limitInput(event.target.value, 64))}
                 placeholder={suggestedName}
                 disabled={isSubmitting}
               />
@@ -158,7 +159,7 @@ export function OrganisationOnboardingDialog() {
               <Input
                 id="join-organisation-code"
                 value={joinCode}
-                onChange={(event) => setJoinCode(event.target.value)}
+                onChange={(event) => setJoinCode(limitInput(event.target.value, 16))}
                 placeholder="Enter code"
                 autoCapitalize="characters"
                 disabled={isSubmitting}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PlusIcon, TicketIcon } from "lucide-react";
+import { PlusIcon, TicketIcon, UsersRoundIcon } from "lucide-react";
+import { NotAuthorised, NotAuthorisedNoOrganisation } from "@/components/ui/not-authorised";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,12 +51,13 @@ export function EmployeesContent() {
   const canManageMembers = isManageRole(currentMembership?.role);
   const plan = organisation?.subscription ?? PLANS.FREE;
   const memberLimit = PLAN_LIMITS[plan].EMPLOYEES;
+  const inviteLimit = PLAN_LIMITS[plan].INVITES;
   const hasLimit = Number.isFinite(memberLimit);
   const maxMemberCountHit = hasLimit && members.length >= memberLimit;
+  const maxInviteCountHit = Number.isFinite(inviteLimit) && invites.length >= inviteLimit;
 
-  async function handleRefreshAll() {
-    await refetchMembers();
-    await refetchInvites();
+  async function handleMembersChanged() {
+    await refetchMembers(true);
   }
 
   if (organisationLoading || membersLoading || invitesLoading) {
@@ -83,10 +85,16 @@ export function EmployeesContent() {
   }
 
   if (!organisation) {
+    return <NotAuthorisedNoOrganisation />;
+  }
+
+  if (!canManageMembers) {
     return (
-      <p className="py-6 text-sm text-muted-foreground">
-        You need to join or create an organisation before managing employees.
-      </p>
+      <NotAuthorised
+        icon={<UsersRoundIcon className="size-5" />}
+        title="Admin access required"
+        description="Only admins and owners can view and manage organisation members. Contact your organisation owner if you need access."
+      />
     );
   }
 
@@ -106,7 +114,7 @@ export function EmployeesContent() {
         <Button
           size="sm"
           onClick={() => setShowAddMember(true)}
-          disabled={!canManageMembers || maxMemberCountHit}
+          disabled={!canManageMembers || maxMemberCountHit || maxInviteCountHit}
         >
           <PlusIcon />
           Add Member
@@ -124,12 +132,21 @@ export function EmployeesContent() {
         </Alert>
       )}
 
+      {maxInviteCountHit && canManageMembers && !maxMemberCountHit && (
+        <Alert>
+          <AlertTitle>Invite code limit reached</AlertTitle>
+          <AlertDescription>
+            You have {inviteLimit} active invite codes, which is the limit for your plan. Delete unused codes to create new ones.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <EmployeeTable
         members={members}
         memberLimit={memberLimit}
         currentUserId={user?.id ?? null}
         canManageMembers={canManageMembers}
-        onChanged={handleRefreshAll}
+        onChanged={handleMembersChanged}
       />
 
       <ActiveInviteCodesDialog
@@ -143,6 +160,7 @@ export function EmployeesContent() {
       <AddMemberDialog
         open={showAddMember}
         organisationId={organisation.id}
+        inviteLimit={inviteLimit}
         onClose={() => setShowAddMember(false)}
         onCreated={refetchInvites}
       />

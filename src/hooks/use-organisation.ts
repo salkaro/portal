@@ -13,6 +13,7 @@ import type { Organisation } from '@/types/organisation'
 
 type UseOrganisationResult = {
     organisation: Organisation | null
+    pendingApproval: boolean
     loading: boolean
     userLoading: boolean
     error: PostgrestError | null
@@ -32,10 +33,23 @@ type UseOrganisationResult = {
     refetch: () => Promise<void>
 }
 
+// Module-level cache — survives client-side navigation
+let cachedOrganisation: Organisation | null = null
+let cachedApproved: boolean = true
+let cacheUserId: string | null = null
+
 export function useOrganisation(): UseOrganisationResult {
     const { user, loading: userLoading } = useCurrentUser()
-    const [organisation, setOrganisation] = useState<Organisation | null>(null)
-    const [loading, setLoading] = useState(true)
+
+    const isCacheValid = user?.id === cacheUserId && cachedOrganisation !== undefined
+
+    const [organisation, setOrganisation] = useState<Organisation | null>(
+        isCacheValid ? cachedOrganisation : null
+    )
+    const [pendingApproval, setPendingApproval] = useState<boolean>(
+        isCacheValid ? !cachedApproved : false
+    )
+    const [loading, setLoading] = useState(!isCacheValid)
     const [error, setError] = useState<PostgrestError | null>(null)
 
     const defaultName = useMemo(() => {
@@ -54,7 +68,11 @@ export function useOrganisation(): UseOrganisationResult {
 
     async function refetch() {
         if (!user) {
+            cachedOrganisation = null
+            cachedApproved = true
+            cacheUserId = null
             setOrganisation(null)
+            setPendingApproval(false)
             setError(null)
             setLoading(false)
             return
@@ -63,13 +81,28 @@ export function useOrganisation(): UseOrganisationResult {
         setLoading(true)
         const result = await getCurrentUserOrganisation(user.id)
 
+        if (!result.error) {
+            cachedOrganisation = result.data
+            cachedApproved = result.approved
+            cacheUserId = user.id
+        }
+
         setOrganisation(result.data)
+        setPendingApproval(!result.approved && result.data !== null)
         setError(result.error)
         setLoading(false)
     }
 
     useEffect(() => {
         if (userLoading) return
+
+        // Serve from cache immediately if valid
+        if (user?.id === cacheUserId && cachedOrganisation !== undefined) {
+            setOrganisation(cachedOrganisation)
+            setPendingApproval(!cachedApproved && cachedOrganisation !== null)
+            setLoading(false)
+            return
+        }
 
         let cancelled = false
 
@@ -79,20 +112,25 @@ export function useOrganisation(): UseOrganisationResult {
             if (!user) {
                 if (!cancelled) {
                     setOrganisation(null)
+                    setPendingApproval(false)
                     setError(null)
                     setLoading(false)
                 }
                 return
             }
 
-            if (!cancelled) {
-                setLoading(true)
-            }
+            if (!cancelled) setLoading(true)
 
             const result = await getCurrentUserOrganisation(user.id)
 
             if (!cancelled) {
+                if (!result.error) {
+                    cachedOrganisation = result.data
+                    cachedApproved = result.approved
+                    cacheUserId = user.id
+                }
                 setOrganisation(result.data)
+                setPendingApproval(!result.approved && result.data !== null)
                 setError(result.error)
                 setLoading(false)
             }
@@ -100,9 +138,7 @@ export function useOrganisation(): UseOrganisationResult {
 
         void run()
 
-        return () => {
-            cancelled = true
-        }
+        return () => { cancelled = true }
     }, [user, userLoading])
 
     async function createOrganisation(input?: {
@@ -119,8 +155,12 @@ export function useOrganisation(): UseOrganisationResult {
             iconUrl: input?.iconUrl ?? null,
         })
 
-        if (result.data) {
+        if (result.data && user) {
+            cachedOrganisation = result.data
+            cachedApproved = true
+            cacheUserId = user.id
             setOrganisation(result.data)
+            setPendingApproval(false)
             setError(null)
         }
 
@@ -130,8 +170,12 @@ export function useOrganisation(): UseOrganisationResult {
     async function joinByCode(input: { code: string }) {
         const result = await joinOrganisationByCode({ code: input.code })
 
-        if (result.data) {
+        if (result.data && user) {
+            cachedOrganisation = result.data
+            cachedApproved = false
+            cacheUserId = user.id
             setOrganisation(result.data)
+            setPendingApproval(true)
             setError(null)
         }
 
@@ -156,7 +200,9 @@ export function useOrganisation(): UseOrganisationResult {
             subscription: input.subscription,
         })
 
-        if (result.data) {
+        if (result.data && user) {
+            cachedOrganisation = result.data
+            cacheUserId = user.id
             setOrganisation(result.data)
         }
 
@@ -169,6 +215,7 @@ export function useOrganisation(): UseOrganisationResult {
 
     return {
         organisation,
+        pendingApproval,
         loading,
         userLoading,
         error,

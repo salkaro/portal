@@ -1,4 +1,4 @@
-import { GalleryVerticalEnd } from "lucide-react";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -11,7 +11,20 @@ export default function AuthLayout({
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <GalleryVerticalEnd className="size-4" />
+              <Image
+                src="/brand/light/icon-transparent.svg"
+                alt="Salkaro logo"
+                width={16}
+                height={16}
+                className="size-4 dark:hidden"
+              />
+              <Image
+                src="/brand/dark/icon-transparent.svg"
+                alt="Salkaro logo"
+                width={16}
+                height={16}
+                className="hidden size-4 dark:block"
+              />
             </div>
             Salkaro Portal
           </a>

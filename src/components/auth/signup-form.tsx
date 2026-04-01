@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { limitInput } from '@/utils/string'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -117,7 +119,7 @@ export function SignupForm() {
               required
               disabled={isLoading}
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => setFullName(limitInput(e.target.value, 64))}
             />
           </div>
 
@@ -130,7 +132,7 @@ export function SignupForm() {
               required
               disabled={isLoading}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(limitInput(e.target.value, 254))}
             />
           </div>
 
@@ -145,7 +147,7 @@ export function SignupForm() {
               aria-invalid={passwordError !== null}
               value={password}
               onChange={(e) => {
-                setPassword(e.target.value)
+                setPassword(limitInput(e.target.value, 128))
                 if (passwordError) setPasswordError(null)
               }}
             />
@@ -176,7 +178,26 @@ export function SignupForm() {
           disabled={isLoading}
           onClick={handleGoogleSignIn}
         >
-          {activeAction === 'google' ? <Spinner /> : null}
+          {activeAction === 'google' ? (
+            <Spinner />
+          ) : (
+            <>
+              <Image
+                src="/auth/light/google.svg"
+                alt="Google"
+                width={16}
+                height={16}
+                className="dark:hidden"
+              />
+              <Image
+                src="/auth/dark/google.svg"
+                alt="Google"
+                width={16}
+                height={16}
+                className="hidden dark:block"
+              />
+            </>
+          )}
           Continue with Google
         </Button>
       </div>

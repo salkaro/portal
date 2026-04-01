@@ -5,7 +5,6 @@ import Image from "next/image";
 import { ArrowUpRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { IntegrationProvider } from "@/constants/integrations";
-import { useTheme } from "next-themes";
 
 type IntegrationCardProps = {
   provider: IntegrationProvider;
@@ -27,7 +26,7 @@ export function IntegrationCard({
   connectedCount = 0,
 }: IntegrationCardProps) {
   return (
-    <article className="rounded-2xl border border-white/10 bg-[#050607] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+    <article className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
       <div className="flex h-full min-h-72 flex-col">
         <div className="flex flex-1 items-center justify-center px-6">
           <Image
@@ -35,24 +34,22 @@ export function IntegrationCard({
             alt={`${title} integration preview`}
             width={180}
             height={72}
-            className="hidden h-auto max-h-16 w-auto object-contain opacity-95 dark:block"
+            className="h-auto max-h-16 w-auto object-contain opacity-95 dark:hidden"
           />
           <Image
             src={imageForDarkTheme}
             alt={`${title} integration preview`}
             width={180}
             height={72}
-            className="h-auto max-h-16 w-auto object-contain opacity-95 dark:hidden"
+            className="hidden h-auto max-h-16 w-auto object-contain opacity-95 dark:block"
           />
         </div>
 
         <div className="mt-8 space-y-4">
-          <p className="leading-relaxed text-zinc-300">
-            {description}
-          </p>
+          <p className="leading-relaxed text-muted-foreground">{description}</p>
 
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               {connectedCount > 0
                 ? `${connectedCount} connected`
                 : "Not connected"}

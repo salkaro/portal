@@ -12,7 +12,7 @@ export function useOrganisationMembers(organisationId: string | null | undefined
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<PostgrestError | null>(null)
 
-    const refetch = useCallback(async () => {
+    const refetch = useCallback(async (silent = false) => {
         if (!organisationId) {
             setMembers([])
             setError(null)
@@ -20,7 +20,7 @@ export function useOrganisationMembers(organisationId: string | null | undefined
             return
         }
 
-        setLoading(true)
+        if (!silent) setLoading(true)
         const result = await getOrganisationMembers(organisationId)
         setMembers(result.data)
         setError(result.error)

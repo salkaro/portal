@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CopyIcon, CheckIcon } from "lucide-react";
+import { limitInput } from "@/utils/string";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { createOrganisationInvite } from "@/services/supabase/employees";
 type AddMemberDialogProps = {
   open: boolean;
   organisationId: string;
+  inviteLimit: number;
   onClose: () => void;
   onCreated: () => Promise<void>;
 };
@@ -26,6 +28,7 @@ type AddMemberDialogProps = {
 export function AddMemberDialog({
   open,
   organisationId,
+  inviteLimit,
   onClose,
   onCreated,
 }: AddMemberDialogProps) {
@@ -48,6 +51,7 @@ export function AddMemberDialog({
       role,
       usesLeft: Number(uses),
       email: email.trim() || null,
+      inviteLimit,
     });
 
     if (result.error || !result.data) {
@@ -136,7 +140,7 @@ export function AddMemberDialog({
                 id="invite-email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => setEmail(limitInput(event.target.value, 254))}
                 placeholder="member@company.com"
               />
             </div>

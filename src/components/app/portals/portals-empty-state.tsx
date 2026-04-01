@@ -1,15 +1,20 @@
 import { AppWindowIcon, LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type PortalsEmptyStateProps = {
   hasMondayConnections: boolean;
   onCreatePortal: () => void;
+  atLimit?: boolean;
+  limitLabel?: string;
 };
 
 export function PortalsEmptyState({
   hasMondayConnections,
   onCreatePortal,
+  atLimit = false,
+  limitLabel,
 }: PortalsEmptyStateProps) {
   return (
     <div className="flex min-h-72 flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center">
@@ -26,7 +31,18 @@ export function PortalsEmptyState({
       </p>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        <Button onClick={onCreatePortal}>Create portal</Button>
+        {atLimit ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0}>
+                <Button disabled>Create portal</Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{limitLabel} Upgrade to create more.</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button onClick={onCreatePortal}>Create portal</Button>
+        )}
         {!hasMondayConnections ? (
           <Button variant="outline" asChild>
             <Link href="/integrations/browse">

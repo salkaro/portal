@@ -64,7 +64,7 @@ const PORTAL_SELECT =
     'id,organisation_id,name,slug,provider,connection_id,status,access_type,access_email_allowlist,access_code_hash,import_config,customization,created_at,updated_at'
 
 async function hashPortalAccessCode(code: string): Promise<string> {
-    const data = new TextEncoder().encode(code.trim())
+    const data = new TextEncoder().encode(code.trim().toUpperCase())
     const digestBuffer = await crypto.subtle.digest('SHA-256', data)
 
     return Array.from(new Uint8Array(digestBuffer))
@@ -177,6 +177,44 @@ export async function updatePortalStatus(input: {
     const { data, error } = await supabase
         .from('portals')
         .update({ status: input.status })
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .select(PORTAL_SELECT)
+        .single<Portal>()
+
+    if (error) return { data: null, error }
+    return { data, error: null }
+}
+
+export async function updatePortalImportConfig(input: {
+    organisationId: string
+    portalId: string
+    importConfig: PortalImportConfig
+}): Promise<{ data: Portal | null; error: PostgrestError | null }> {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+        .from('portals')
+        .update({ import_config: input.importConfig })
+        .eq('organisation_id', input.organisationId)
+        .eq('id', input.portalId)
+        .select(PORTAL_SELECT)
+        .single<Portal>()
+
+    if (error) return { data: null, error }
+    return { data, error: null }
+}
+
+export async function updatePortalCustomization(input: {
+    organisationId: string
+    portalId: string
+    customization: PortalCustomization
+}): Promise<{ data: Portal | null; error: PostgrestError | null }> {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+        .from('portals')
+        .update({ customization: input.customization })
         .eq('organisation_id', input.organisationId)
         .eq('id', input.portalId)
         .select(PORTAL_SELECT)

@@ -8,7 +8,7 @@ type FindByCodeBody = {
 }
 
 function hashCode(code: string): string {
-    return createHash('sha256').update(code.trim()).digest('hex')
+    return createHash('sha256').update(code.trim().toUpperCase()).digest('hex')
 }
 
 export async function POST(request: NextRequest) {

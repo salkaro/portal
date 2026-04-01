@@ -1,4 +1,5 @@
 import { ServiceError } from '@/services/service-error'
+import type { PortalBoardData, PortalColumn, PortalItem, PortalSubitem } from '@/types/portal-view'
 
 type MondayGraphQLResponse<TData> = {
     data?: TData
@@ -188,4 +189,100 @@ export async function fetchMondayAccountIdentity(accessToken: string): Promise<M
             accountName: null,
         }
     }
+}
+
+export async function fetchMondayBoardData(
+    accessToken: string,
+    boardId: string,
+    columnIds: string[]
+): Promise<PortalBoardData> {
+    const data = await mondayGraphql<{
+        boards: Array<{
+            columns: Array<{ id: string; title: string; type: string }>
+            items_page: {
+                items: Array<{
+                    id: string
+                    name: string
+                    group: { id: string; title: string }
+                    column_values: Array<{
+                        id: string
+                        text: string
+                        value: string | null
+                        column: { title: string; type: string }
+                    }>
+                    subitems: Array<{
+                        id: string
+                        name: string
+                        column_values: Array<{
+                            id: string
+                            text: string
+                            column: { type: string }
+                        }>
+                    }>
+                }>
+            }
+        }>
+    }>(
+        accessToken,
+        `query ($boardId: [ID!], $columnIds: [String!]) {
+            boards(ids: $boardId) {
+                columns(ids: $columnIds) { id title type }
+                items_page(limit: 200) {
+                    items {
+                        id
+                        name
+                        group { id title }
+                        column_values(ids: $columnIds) {
+                            id
+                            text
+                            value
+                            column { title type }
+                        }
+                        subitems {
+                            id
+                            name
+                            column_values {
+                                id
+                                text
+                                column { type }
+                            }
+                        }
+                    }
+                }
+            }
+        }`,
+        { boardId, columnIds }
+    )
+
+    const board = data.boards?.[0]
+
+    const columns: PortalColumn[] = (board?.columns ?? []).map((col) => ({
+        id: col.id,
+        title: col.title,
+        type: col.type,
+    }))
+
+    const items: PortalItem[] = (board?.items_page?.items ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        groupId: item.group?.id ?? '',
+        groupTitle: item.group?.title ?? 'Items',
+        columnValues: item.column_values.map((cv) => ({
+            columnId: cv.id,
+            title: cv.column.title,
+            type: cv.column.type,
+            text: cv.text ?? '',
+            value: cv.value,
+        })),
+        subitems: (item.subitems ?? []).map((sub) => {
+            const statusCol = sub.column_values.find((cv) => cv.column.type === 'status')
+            return {
+                id: sub.id,
+                name: sub.name,
+                status: statusCol?.text ?? null,
+            } satisfies PortalSubitem
+        }),
+    }))
+
+    return { columns, items }
 }

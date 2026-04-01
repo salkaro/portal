@@ -1,6 +1,7 @@
 import { ServiceError } from '@/services/service-error'
 import type { MondayBoardColumn, MondayBoard } from '@/services/monday'
 import type { PortalAccessType } from '@/types/portal'
+import type { PortalBoardData } from '@/types/portal-view'
 
 type PortalSummary = {
     id: string
@@ -179,4 +180,19 @@ export async function verifyPortalCode(input: {
     }
 
     return (await response.json()) as PublicPortalResponse
+}
+
+export async function fetchPortalBoardData(portalId: string): Promise<PortalBoardData> {
+    const response = await fetch(`/api/portals/public/board-data?portal_id=${encodeURIComponent(portalId)}`)
+
+    if (!response.ok) {
+        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
+        throw new ServiceError(
+            errorPayload?.message ?? 'Unable to load portal data',
+            'upstream_error',
+            response.status
+        )
+    }
+
+    return (await response.json()) as PortalBoardData
 }

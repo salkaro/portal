@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { limitInput } from "@/utils/string";
 import { toast } from "sonner";
 import {
   CheckIcon,
@@ -335,7 +336,7 @@ export function PortalCreateDialog({
               <Input
                 id="portal-name"
                 value={portalName}
-                onChange={(event) => setPortalName(event.target.value)}
+                onChange={(event) => setPortalName(limitInput(event.target.value, 64))}
               />
             </div>
 
@@ -344,7 +345,7 @@ export function PortalCreateDialog({
               <Textarea
                 id="portal-tagline"
                 value={tagline}
-                onChange={(event) => setTagline(event.target.value)}
+                onChange={(event) => setTagline(limitInput(event.target.value, 64))}
                 placeholder="A concise project summary your client will see at the top of the portal"
               />
             </div>

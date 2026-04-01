@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { EllipsisVerticalIcon, PencilIcon, Trash2Icon, UsersIcon } from "lucide-react";
+import { useState } from "react";
+import { CheckIcon, EllipsisVerticalIcon, PencilIcon, Trash2Icon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,21 +22,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
 import { formatDateTime } from "@/utils/format-dates";
 import type { OrganisationMember } from "@/services/supabase/employees";
-import { removeOrganisationMember } from "@/services/supabase/employees";
+import {
+  approveOrganisationMember,
+  removeOrganisationMember,
+} from "@/services/supabase/employees";
 import { UpdateMemberDialog } from "@/components/app/employees/dialogs/dialog-update-member";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
 
 type EmployeeTableProps = {
   members: OrganisationMember[];
@@ -58,26 +53,11 @@ export function EmployeeTable({
   canManageMembers,
   onChanged,
 }: EmployeeTableProps) {
-  const [query, setQuery] = useState("");
-  const [editingMember, setEditingMember] = useState<OrganisationMember | null>(
-    null,
-  );
-  const [pendingRemovalMember, setPendingRemovalMember] =
-    useState<OrganisationMember | null>(null);
+  const [editingMember, setEditingMember] = useState<OrganisationMember | null>(null);
+  const [pendingRemovalMember, setPendingRemovalMember] = useState<OrganisationMember | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const hasLimit = Number.isFinite(memberLimit);
-
-  const filteredMembers = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return members;
-
-    return members.filter((member) => {
-      const fullName = (member.full_name ?? "").toLowerCase();
-      const email = (member.email ?? "").toLowerCase();
-      const role = member.role.toLowerCase();
-      return fullName.includes(q) || email.includes(q) || role.includes(q);
-    });
-  }, [members, query]);
 
   async function handleRemoveMember(member: OrganisationMember) {
     setRemovingId(member.user_id);
@@ -97,113 +77,157 @@ export function EmployeeTable({
     setRemovingId(null);
   }
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name, email, or role..."
-          className="max-w-sm"
-        />
+  async function handleApproveMember(member: OrganisationMember) {
+    setApprovingId(member.user_id);
+    const result = await approveOrganisationMember({
+      organisationId: member.organisation_id,
+      userId: member.user_id,
+    });
 
-        <div className="flex items-center gap-2">
+    if (result.error) {
+      toast.error(result.error.message);
+      setApprovingId(null);
+      return;
+    }
+
+    toast.success(`${member.full_name || member.email || "Member"} approved.`);
+    await onChanged();
+    setApprovingId(null);
+  }
+
+  const columns: SalkaroColumn<OrganisationMember>[] = [
+    {
+      key: "member",
+      label: "Member",
+      render: (m) => {
+        const displayName = m.user_id === currentUserId ? "You" : (m.full_name || m.email || "Member");
+        const initials = (m.full_name || m.email || "?")
+          .split(" ")
+          .map((p) => p[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
+        return (
+          <div className="flex items-center gap-3">
+            <div className="size-8 shrink-0 overflow-hidden rounded-full bg-muted">
+              {m.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.avatar_url} alt={displayName} className="size-full object-cover" />
+              ) : (
+                <div className="flex size-full items-center justify-center text-[0.625rem] font-semibold text-muted-foreground">
+                  {initials}
+                </div>
+              )}
+            </div>
+            <div className="font-medium">
+              <div className="flex items-center gap-2">
+                <p>{displayName}</p>
+                {!m.approved && (
+                  <Badge variant="outline" className="text-[0.625rem] border-amber-500/40 bg-amber-500/10 text-amber-600">
+                    Pending approval
+                  </Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">{m.email ?? ""}</p>
+            </div>
+          </div>
+        );
+      },
+      searchValue: (m) => `${m.full_name ?? ""} ${m.email ?? ""} ${m.role}`,
+    },
+    {
+      key: "role",
+      label: "Role",
+      render: (m) => (
+        <Badge variant={getRoleVariant(m.role)} className="capitalize">
+          {m.role}
+        </Badge>
+      ),
+      searchValue: (m) => m.role,
+    },
+    {
+      key: "joined",
+      label: "Joined",
+      render: (m) => formatDateTime(m.created_at),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "text-right",
+      render: (m) => {
+        const canManage = canManageMembers && m.user_id !== currentUserId && m.role !== "owner";
+        if (!canManage) return <span className="text-xs text-muted-foreground">-</span>;
+
+        // Pending member — show approve + deny inline
+        if (!m.approved) {
+          return (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={approvingId === m.user_id}
+                onClick={() => void handleApproveMember(m)}
+              >
+                {approvingId === m.user_id
+                  ? <Spinner className="size-3.5" />
+                  : <CheckIcon className="size-3.5" />}
+                Approve
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled={Boolean(removingId)}
+                onClick={() => setPendingRemovalMember(m)}
+              >
+                <Trash2Icon className="size-3.5 text-destructive" />
+              </Button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm">
+                  <EllipsisVerticalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem onClick={() => setEditingMember(m)}>
+                  <PencilIcon />
+                  Update
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setPendingRemovalMember(m)}>
+                  <Trash2Icon />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <>
+      <SalkaroTable
+        rows={members}
+        columns={columns}
+        rowKey={(m) => m.user_id}
+        searchable
+        searchPlaceholder="Search by name, email, or role..."
+        filterBy={["member", "role"]}
+        emptyMessage="No members found."
+        headerRight={
           <Badge variant="outline" className="gap-1">
             <UsersIcon className="size-3" />
-            {hasLimit
-              ? `${members.length} / ${memberLimit}`
-              : `${members.length} / Unlimited`}
+            {hasLimit ? `${members.length} / ${memberLimit}` : `${members.length} / Unlimited`}
           </Badge>
-        </div>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredMembers.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground">
-                No members found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredMembers.map((member) => {
-              const canEditMember =
-                canManageMembers &&
-                member.user_id !== currentUserId &&
-                member.role !== "owner";
-
-              return (
-                <TableRow key={member.user_id}>
-                  <TableCell className="font-medium">
-                    {member.user_id === currentUserId ? (
-                      <div>
-                        <p>You</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {member.email ?? ""}
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p>{member.full_name || member.email || "Member"}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {member.email ?? ""}
-                        </p>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={getRoleVariant(member.role)}
-                      className="capitalize"
-                    >
-                      {member.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDateTime(member.created_at)}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      {canEditMember ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon-sm">
-                              <EllipsisVerticalIcon />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-32">
-                            <DropdownMenuItem
-                              onClick={() => setEditingMember(member)}
-                            >
-                              <PencilIcon />
-                              Update
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setPendingRemovalMember(member)}
-                            >
-                              <Trash2Icon />
-                              Remove
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+        }
+      />
 
       {editingMember && (
         <UpdateMemberDialog
@@ -216,11 +240,7 @@ export function EmployeeTable({
 
       <AlertDialog
         open={Boolean(pendingRemovalMember)}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setPendingRemovalMember(null);
-          }
-        }}
+        onOpenChange={(open) => { if (!open) setPendingRemovalMember(null); }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -230,16 +250,13 @@ export function EmployeeTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={Boolean(removingId)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={Boolean(removingId)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={Boolean(removingId)}
-              onClick={async (event) => {
-                event.preventDefault();
+              onClick={async (e) => {
+                e.preventDefault();
                 if (!pendingRemovalMember) return;
-
                 await handleRemoveMember(pendingRemovalMember);
                 setPendingRemovalMember(null);
               }}
@@ -249,6 +266,6 @@ export function EmployeeTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

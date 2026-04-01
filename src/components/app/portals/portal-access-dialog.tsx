@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import {
@@ -63,6 +62,7 @@ export function PortalAccessDialog({
     alreadyHasCode ? "" : generateAccessCode()
   );
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -230,7 +230,7 @@ export function PortalAccessDialog({
               <Label htmlFor="access-code">Portal access code</Label>
               {alreadyHasCode && accessCode.trim().length === 0 ? (
                 <>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground">
                     A code is already set. For security, it cannot be viewed again.
                   </p>
                   <Button
@@ -243,7 +243,20 @@ export function PortalAccessDialog({
                 </>
               ) : (
                 <>
-                  <Input id="access-code" value={accessCode} readOnly />
+                  <InputGroup>
+                    <InputGroupInput id="access-code" value={accessCode} readOnly />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        onClick={() => {
+                          void navigator.clipboard.writeText(accessCode);
+                          setCodeCopied(true);
+                          setTimeout(() => setCodeCopied(false), 2000);
+                        }}
+                      >
+                        {codeCopied ? <Check className="text-green-500" /> : <Copy />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
                   <p className="text-xs text-muted-foreground">
                     Save this code now — you won&apos;t be able to view it again after saving.
                   </p>

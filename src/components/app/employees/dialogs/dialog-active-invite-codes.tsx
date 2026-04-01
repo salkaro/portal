@@ -4,6 +4,7 @@ import { CheckIcon, CopyIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,14 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
 import { formatDateTime } from "@/utils/format-dates";
 import type { OrganisationInvite } from "@/services/supabase/employees";
 import { deleteOrganisationInvite } from "@/services/supabase/employees";
@@ -64,76 +58,80 @@ export function ActiveInviteCodesDialog({
     setDeletingId(null);
   }
 
+  const columns: SalkaroColumn<OrganisationInvite>[] = [
+    {
+      key: "code",
+      label: "Code",
+      render: (i) => <span className="font-mono">{i.code}</span>,
+      searchValue: (i) => i.code,
+    },
+    {
+      key: "email",
+      label: "Email",
+      render: (i) => i.email || <span className="text-muted-foreground">—</span>,
+      searchValue: (i) => i.email ?? "",
+    },
+    {
+      key: "role",
+      label: "Role",
+      render: (i) => <Badge variant="outline" className="capitalize">{i.role}</Badge>,
+      searchValue: (i) => i.role,
+    },
+    {
+      key: "uses_left",
+      label: "Uses left",
+      render: (i) => i.uses_left,
+    },
+    {
+      key: "created",
+      label: "Created",
+      render: (i) => <span className="text-muted-foreground">{formatDateTime(i.created_at)}</span>,
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "text-right",
+      render: (i) => (
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="icon-sm" onClick={() => void handleCopy(i.code)}>
+            {copiedCode === i.code ? <CheckIcon /> : <CopyIcon />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={deletingId === i.id}
+            onClick={() => void handleDelete(i.id)}
+          >
+            <Trash2Icon className="text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="sm:max-w-2xl" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Active invite codes</DialogTitle>
           <DialogDescription>
-            Share active codes with teammates to let them join your
-            organisation.
+            Share active codes with teammates to let them join your organisation.
           </DialogDescription>
         </DialogHeader>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Uses left</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invites.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground">
-                  No active invite codes.
-                </TableCell>
-              </TableRow>
-            ) : (
-              invites.map((invite) => (
-                <TableRow key={invite.id}>
-                  <TableCell className="font-mono">{invite.code}</TableCell>
-                  <TableCell>{invite.email || "-"}</TableCell>
-                  <TableCell className="capitalize">{invite.role}</TableCell>
-                  <TableCell>{invite.uses_left}</TableCell>
-                  <TableCell>{formatDateTime(invite.created_at)}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => handleCopy(invite.code)}
-                      >
-                        {copiedCode === invite.code ? (
-                          <CheckIcon />
-                        ) : (
-                          <CopyIcon />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={deletingId === invite.id}
-                        onClick={() => handleDelete(invite.id)}
-                      >
-                        <Trash2Icon className="text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <SalkaroTable
+          rows={invites}
+          columns={columns}
+          rowKey={(i) => i.id}
+          searchable
+          pageSize={5}
+          searchPlaceholder="Search codes..."
+          filterBy={["code", "email", "role"]}
+          emptyMessage="No active invite codes."
+        />
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
+          <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

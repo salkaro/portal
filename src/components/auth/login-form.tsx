@@ -1,60 +1,61 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Spinner } from '@/components/ui/spinner'
-import { signInWithEmail, signInWithGoogle } from '@/services/auth'
-import { logger } from '@/lib/logger'
-import { ROUTES } from '@/constants/routes'
+import { useState } from "react";
+import { limitInput } from "@/utils/string";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
+import { signInWithEmail, signInWithGoogle } from "@/services/auth";
+import { logger } from "@/lib/logger";
+import { ROUTES } from "@/constants/routes";
 
-type ActiveAction = 'email' | 'google' | null
+type ActiveAction = "email" | "google" | null;
 
 export function LoginForm() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [activeAction, setActiveAction] = useState<ActiveAction>(null)
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<ActiveAction>(null);
 
-  const isLoading = activeAction !== null
+  const isLoading = activeAction !== null;
 
   async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setActiveAction('email')
+    e.preventDefault();
+    setError(null);
+    setActiveAction("email");
 
-    const { data, error } = await signInWithEmail(email, password)
+    const { data, error } = await signInWithEmail(email, password);
 
     if (error) {
-      logger.warn('auth.signin.failed', { reason: error.message })
-      setError(error.message)
-      setActiveAction(null)
-      return
+      logger.warn("auth.signin.failed", { reason: error.message });
+      setError(error.message);
+      setActiveAction(null);
+      return;
     }
 
-    logger.info('auth.signin.success', { userId: data?.user?.id })
-    router.push(ROUTES.DASHBOARD)
+    logger.info("auth.signin.success", { userId: data?.user?.id });
+    router.push(ROUTES.DASHBOARD);
   }
 
   async function handleGoogleSignIn() {
-    setError(null)
-    setActiveAction('google')
+    setError(null);
+    setActiveAction("google");
 
-    const { error } = await signInWithGoogle()
+    const { error } = await signInWithGoogle();
 
     if (error) {
-      logger.warn('auth.signin.google.failed', { reason: error.message })
-      setError(error.message)
-      setActiveAction(null)
+      logger.warn("auth.signin.google.failed", { reason: error.message });
+      setError(error.message);
+      setActiveAction(null);
     }
     // On success the browser is redirected by Supabase OAuth — no push needed
   }
-
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
@@ -88,7 +89,7 @@ export function LoginForm() {
               required
               disabled={isLoading}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(limitInput(e.target.value, 254))}
             />
           </div>
 
@@ -101,7 +102,7 @@ export function LoginForm() {
               required
               disabled={isLoading}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(limitInput(e.target.value, 128))}
             />
           </div>
 
@@ -127,7 +128,26 @@ export function LoginForm() {
           disabled={isLoading}
           onClick={handleGoogleSignIn}
         >
-          {activeAction === "google" ? <Spinner /> : null}
+          {activeAction === "google" ? (
+            <Spinner />
+          ) : (
+            <>
+              <Image
+                src="/auth/light/google.svg"
+                alt="Google"
+                width={14}
+                height={14}
+                className="dark:hidden"
+              />
+              <Image
+                src="/auth/dark/google.svg"
+                alt="Google"
+                width={14}
+                height={14}
+                className="hidden dark:block"
+              />
+            </>
+          )}
           Continue with Google
         </Button>
       </div>

@@ -1,4 +1,5 @@
 import { pageMetadata } from "@/lib/metadata";
+import { PageGuard } from "@/components/guards/page-guard";
 import { IntegrationsContent } from "@/components/app/integrations/integrations-content";
 
 export const metadata = pageMetadata(
@@ -9,7 +10,9 @@ export const metadata = pageMetadata(
 export default function IntegrationsPage() {
   return (
     <div className="px-4">
-      <IntegrationsContent />
+      <PageGuard requiredPlan="free">
+        <IntegrationsContent />
+      </PageGuard>
     </div>
   );
 }

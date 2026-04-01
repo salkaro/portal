@@ -3,12 +3,15 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useConnections } from "@/hooks/use-connections";
 import { useOrganisation } from "@/hooks/use-organisation";
 import { usePortals } from "@/hooks/use-portals";
+import { PLAN_LIMITS } from "@/constants/plans";
 import { PortalsEmptyState } from "@/components/app/portals/portals-empty-state";
 import { PortalsList } from "@/components/app/portals/portals-list";
 import { PortalCreateDialog } from "@/components/app/portals/portal-create-dialog";
+import type { PlanTier } from "@/lib/plans";
 
 export function PortalsContent() {
   const { organisation } = useOrganisation();
@@ -29,6 +32,12 @@ export function PortalsContent() {
   const mondayConnections = useMemo(() => {
     return connections.filter((connection) => connection.provider === "monday");
   }, [connections]);
+
+  const portalLimit = organisation
+    ? PLAN_LIMITS[organisation.subscription as PlanTier].PORTALS
+    : Infinity;
+  const atLimit = Number.isFinite(portalLimit) && portals.length >= portalLimit;
+  const limitLabel = `Your ${organisation?.subscription ?? "current"} plan allows ${portalLimit} portal${portalLimit !== 1 ? "s" : ""}.`;
 
   async function handleRefetchAfterCreate() {
     await Promise.all([refetchPortals(), refetchConnections()]);
@@ -63,13 +72,26 @@ export function PortalsContent() {
     <section className="space-y-4 py-6">
       {portals.length > 0 && (
         <div className="flex items-start justify-end gap-3">
-          <Button onClick={() => setCreateDialogOpen(true)}>Create portal</Button>
+          {atLimit ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button disabled>Create portal</Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{limitLabel} Upgrade to create more.</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button onClick={() => setCreateDialogOpen(true)}>Create portal</Button>
+          )}
         </div>
       )}
       {portals.length === 0 ? (
         <PortalsEmptyState
           hasMondayConnections={mondayConnections.length > 0}
           onCreatePortal={() => setCreateDialogOpen(true)}
+          atLimit={atLimit}
+          limitLabel={limitLabel}
         />
       ) : (
         <PortalsList
@@ -78,7 +100,7 @@ export function PortalsContent() {
           onChanged={handleRefetchAfterCreate}
         />
       )}
-      {organisation ? (
+      {organisation && !atLimit ? (
         <PortalCreateDialog
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}

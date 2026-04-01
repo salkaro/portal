@@ -5,6 +5,7 @@ export type OrganisationMember = {
     organisation_id: string
     user_id: string
     role: 'owner' | 'admin' | 'member'
+    approved: boolean
     created_at: string
     full_name: string | null
     email: string | null
@@ -109,8 +110,30 @@ export async function createOrganisationInvite(input: {
     role: 'admin' | 'member'
     usesLeft: number
     email: string | null
+    inviteLimit: number
 }): Promise<Result<OrganisationInvite | null>> {
     const supabase = createClient()
+
+    // Enforce per-org active invite code limit
+    const { count, error: countError } = await supabase
+        .from('organisation_invites')
+        .select('id', { count: 'exact', head: true })
+        .eq('organisation_id', input.organisationId)
+        .eq('active', true)
+
+    if (countError) return { data: null, error: countError }
+
+    if (Number.isFinite(input.inviteLimit) && (count ?? 0) >= input.inviteLimit) {
+        return {
+            data: null,
+            error: {
+                message: `You have reached the limit of ${input.inviteLimit} active invite codes for your plan.`,
+                details: '',
+                hint: '',
+                code: 'invite_limit_exceeded',
+            } as PostgrestError,
+        }
+    }
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
         const code = generateInviteCode(8)
@@ -141,6 +164,35 @@ export async function createOrganisationInvite(input: {
 
     const { error } = await supabase.from('organisation_invites').select('id').limit(1)
     return { data: null, error }
+}
+
+export async function approveOrganisationMember(input: {
+    organisationId: string
+    userId: string
+}): Promise<Result<null>> {
+    const supabase = createClient()
+    const { error } = await supabase
+        .from('organisation_members')
+        .update({ approved: true })
+        .eq('organisation_id', input.organisationId)
+        .eq('user_id', input.userId)
+
+    return { data: null, error }
+}
+
+export async function getCurrentUserMembership(organisationId: string): Promise<Result<{ approved: boolean } | null>> {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: null }
+
+    const { data, error } = await supabase
+        .from('organisation_members')
+        .select('approved')
+        .eq('organisation_id', organisationId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+    return { data: data as { approved: boolean } | null, error }
 }
 
 export async function deleteOrganisationInvite(input: {

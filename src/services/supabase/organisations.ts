@@ -7,6 +7,12 @@ type OrganisationResult = {
     error: PostgrestError | null
 }
 
+type OrganisationWithApprovalResult = {
+    data: Organisation | null
+    approved: boolean
+    error: PostgrestError | null
+}
+
 type CreateOrganisationInput = {
     userId: string
     name: string
@@ -23,6 +29,7 @@ type UpdateOrganisationInput = {
 
 type OrganisationMembershipRow = {
     organisation: Organisation | null
+    approved: boolean
 }
 
 const ORGANISATION_SELECT =
@@ -32,18 +39,18 @@ function normalizeJoinCode(code: string): string {
     return code.trim().toUpperCase()
 }
 
-export async function getCurrentUserOrganisation(userId: string): Promise<OrganisationResult> {
+export async function getCurrentUserOrganisation(userId: string): Promise<OrganisationWithApprovalResult> {
     const supabase = createClient()
 
     const { data, error } = await supabase
         .from('organisation_members')
-        .select(`organisation:organisations(${ORGANISATION_SELECT})`)
+        .select(`organisation:organisations(${ORGANISATION_SELECT}), approved`)
         .eq('user_id', userId)
         .limit(1)
         .maybeSingle<OrganisationMembershipRow>()
 
-    if (error) return { data: null, error }
-    return { data: data?.organisation ?? null, error: null }
+    if (error) return { data: null, approved: false, error }
+    return { data: data?.organisation ?? null, approved: data?.approved ?? false, error: null }
 }
 
 export async function createOrganisationForUser(
@@ -67,6 +74,7 @@ export async function createOrganisationForUser(
         organisation_id: organisationId,
         user_id: input.userId,
         role: 'owner',
+        approved: true,
     })
 
     if (membershipError) {
@@ -88,17 +96,18 @@ export async function createOrganisationForUser(
 
 export async function joinOrganisationByCode(input: {
     code: string
-}): Promise<OrganisationResult> {
+}): Promise<OrganisationWithApprovalResult> {
     const supabase = createClient()
 
     const { data, error } = await supabase.rpc('join_organisation_by_code', {
         p_join_code: normalizeJoinCode(input.code),
     })
 
-    if (error) return { data: null, error }
+    if (error) return { data: null, approved: false, error }
 
     const organisation = Array.isArray(data) ? (data[0] as Organisation | undefined) : null
-    return { data: organisation ?? null, error: null }
+    // Joined members always start pending — approved: false
+    return { data: organisation ?? null, approved: false, error: null }
 }
 
 export async function updateOrganisation(
