@@ -17,6 +17,10 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarUpgrade } from "@/components/app/sidebar/sidebar-upgrade";
 import { SidebarUser } from "@/components/app/sidebar/sidebar-user";
+import {
+  ONBOARDING_TOUR_TARGET_ATTRIBUTE,
+  ONBOARDING_TOUR_TARGETS,
+} from "@/constants/onboarding";
 import { ROUTES } from "@/constants/routes";
 import {
   NAV_FOOTER_ITEMS,
@@ -25,6 +29,7 @@ import {
 } from "@/constants/site";
 import { useOrganisation } from "@/hooks/use-organisation";
 import FeatureGuard from "../../guards/feature-guard";
+import type { PlanTier } from "@/lib/plans";
 
 function getInitials(name: string): string {
   const cleaned = name.trim();
@@ -84,7 +89,15 @@ export function AppSidebar() {
                     }
                     tooltip={label}
                   >
-                    <Link href={href}>
+                    <Link
+                      href={href}
+                      {...(href === ROUTES.PORTALS
+                        ? {
+                            [ONBOARDING_TOUR_TARGET_ATTRIBUTE]:
+                              ONBOARDING_TOUR_TARGETS.PORTALS,
+                          }
+                        : {})}
+                    >
                       <Icon />
                       <span>{label}</span>
                     </Link>
@@ -108,7 +121,15 @@ export function AppSidebar() {
                     }
                     tooltip={label}
                   >
-                    <Link href={href}>
+                    <Link
+                      href={href}
+                      {...(href === ROUTES.INTEGRATIONS
+                        ? {
+                            [ONBOARDING_TOUR_TARGET_ATTRIBUTE]:
+                              ONBOARDING_TOUR_TARGETS.INTEGRATIONS,
+                          }
+                        : {})}
+                    >
                       <Icon />
                       <span>{label}</span>
                     </Link>
@@ -122,7 +143,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-2">
         <SidebarMenu>
-          <FeatureGuard freePlanRequired>
+          <FeatureGuard freePlanRequired plan={organisation?.subscription as PlanTier | undefined}>
             <SidebarUpgrade />
           </FeatureGuard>
           {NAV_FOOTER_ITEMS.map(({ label, href, icon: Icon }) => (

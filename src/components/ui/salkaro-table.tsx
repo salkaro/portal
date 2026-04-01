@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SearchIcon, ChevronLeftIcon, ChevronRightIcon, InboxIcon, ChevronDownIcon } from "lucide-react";
+import {
+  SearchIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  InboxIcon,
+  ChevronDownIcon,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,6 +22,7 @@ import { Button } from "@/components/ui/button";
 export type SalkaroColumn<TRow> = {
   key: string;
   label: string;
+  labelPosition?: "right" | "left";
   className?: string;
   render: (row: TRow) => React.ReactNode;
   searchValue?: (row: TRow) => string;
@@ -80,7 +87,9 @@ export function SalkaroTable<TRow>({
   }, [rows, query, columns, filterKeys]);
 
   const totalRows = filteredRows.length;
-  const totalPages = pageSize ? Math.max(1, Math.ceil(totalRows / pageSize)) : 1;
+  const totalPages = pageSize
+    ? Math.max(1, Math.ceil(totalRows / pageSize))
+    : 1;
   const clampedPage = Math.min(page, totalPages);
 
   const displayedRows = useMemo(() => {
@@ -143,7 +152,21 @@ export function SalkaroTable<TRow>({
             <TableHeader>
               <TableRow>
                 {columns.map((col) => (
-                  <TableHead key={col.key} className={col.className}>
+                  <TableHead
+                    key={col.key}
+                    className={
+                      [
+                        col.labelPosition === "right"
+                          ? "text-right"
+                          : col.labelPosition === "left"
+                            ? "text-left"
+                            : "",
+                        col.className ?? "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ") || undefined
+                    }
+                  >
                     {col.label}
                   </TableHead>
                 ))}
@@ -174,8 +197,24 @@ export function SalkaroTable<TRow>({
                     }
                   >
                     {columns.map((col) => (
-                      <TableCell key={col.key} className={col.className}>
-                        {col.render(row) ?? <span className="text-muted-foreground">—</span>}
+                      <TableCell
+                        key={col.key}
+                        className={
+                          [
+                            col.labelPosition === "right"
+                              ? "text-right"
+                              : col.labelPosition === "left"
+                                ? "text-left"
+                                : "",
+                            col.className ?? "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined
+                        }
+                      >
+                        {col.render(row) ?? (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>

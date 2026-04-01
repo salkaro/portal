@@ -154,7 +154,7 @@ function MemberOverLimit({ planLabel }: { planLabel: string }) {
             <h2 className="text-sm font-semibold text-foreground">
               Organisation over plan limits
             </h2>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-65">
               This organisation has exceeded its <span className="font-medium">{planLabel}</span> plan
               limits. An admin or owner needs to remove excess members or portals before you can
               continue.

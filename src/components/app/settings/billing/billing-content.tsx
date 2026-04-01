@@ -1,102 +1,63 @@
-"use client";
-
-import Link from "next/link";
-import { CreditCardIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SalkaroTable } from "@/components/ui/salkaro-table";
 import { PLANS } from "@/constants/plans";
-import { SETTINGS_ROUTES } from "@/constants/routes";
-import { getCurrentUserPlanFromDatabase, type PlanTier } from "@/lib/plans";
-import StripePricingTable from "./pricing-table";
+import { isProduction } from "@/constants/site";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserOrganisation } from "@/services/supabase/organisations";
+import { getInvoices } from "@/services/stripe/invoices";
+import { getSubscriptionStatus } from "@/services/stripe/subscription";
+import { BillingView } from "./billing-view";
+import type { PlanTier } from "@/lib/plans";
 
-type PaymentHistoryItem = {
-  id: string;
-  date: string;
-  amount: string;
-  status: "paid" | "pending" | "failed";
-};
+export async function BillingContent() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-const PAYMENT_HISTORY: PaymentHistoryItem[] = [];
+    if (!user) return null;
 
-function toPlanLabel(plan: PlanTier): string {
-  return plan.charAt(0).toUpperCase() + plan.slice(1);
-}
+    const { data: organisation } = await getCurrentUserOrganisation(user.id, supabase);
 
-export function BillingContent() {
-  const currentPlan = getCurrentUserPlanFromDatabase();
-  const isFreePlan = currentPlan === PLANS.FREE;
-  const renewalCopy = isFreePlan
-    ? "No active renewal while on the free plan."
-    : "Your subscription will auto renew on Apr 15, 2026.";
-  const cadenceCopy = isFreePlan ? "Free" : "Monthly";
-  const actionLabel = isFreePlan ? "Upgrade plan" : "Adjust plan";
+    const currentPlan = (organisation?.subscription ?? PLANS.FREE) as PlanTier;
+    const isFreePlan = currentPlan === PLANS.FREE;
 
-  return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="mt-0.5 rounded-md border p-2.5 text-muted-foreground">
-            <CreditCardIcon className="size-5" />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold">
-                {toPlanLabel(currentPlan)} plan
-              </h3>
-              <Badge variant={isFreePlan ? "secondary" : "default"}>
-                {cadenceCopy}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">{renewalCopy}</p>
-          </div>
-        </div>
+    const stripeStatus = !isFreePlan && organisation?.stripe_customer_id
+        ? await getSubscriptionStatus({ customerId: organisation.stripe_customer_id })
+        : null;
 
-        <Button asChild variant="outline" className="w-full md:w-auto">
-          <Link
-            href={
-              isFreePlan
-                ? `${SETTINGS_ROUTES.BILLING}#pricing-table`
-                : SETTINGS_ROUTES.BILLING
-            }
-          >
-            {actionLabel}
-          </Link>
-        </Button>
-      </div>
+    const cancelling = stripeStatus?.cancelAtPeriodEnd ?? false;
+    const periodEnd = stripeStatus?.currentPeriodEnd || null;
 
-      <Separator />
+    const cadenceCopy = isFreePlan ? "Free" : cancelling ? "Cancels" : "Monthly";
+    const renewalCopy = isFreePlan
+        ? "No active renewal while on the free plan."
+        : cancelling
+            ? `Your plan will be cancelled on ${periodEnd}. You still have full access until then.`
+            : `Your subscription will auto renew on ${stripeStatus?.nextBillingDate ?? "your next billing date"}.`;
 
-      {isFreePlan ? (
-        <div id="pricing-table" className="space-y-2">
-          <p className="text-sm font-medium">Choose a paid plan</p>
-          <p className="text-xs text-muted-foreground">
-            Compare plans and upgrade when you are ready.
-          </p>
-          <div className="pt-2">
-            <StripePricingTable />
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Payment history</p>
-          <p className="text-xs text-muted-foreground">
-            Recent subscription invoices and charges.
-          </p>
-          <SalkaroTable
-            rows={PAYMENT_HISTORY}
-            rowKey={(p) => p.id}
-            emptyMessage="No payment history available yet."
-            columns={[
-              { key: "id", label: "Invoice", render: (p) => <span className="font-medium">{p.id}</span> },
-              { key: "date", label: "Date", render: (p) => p.date },
-              { key: "amount", label: "Amount", render: (p) => p.amount },
-              { key: "status", label: "Status", render: (p) => <Badge variant="outline">{p.status}</Badge> },
-            ]}
-          />
-        </div>
-      )}
-    </section>
-  );
+    const monthlyPriceId = isProduction
+        ? process.env.STRIPE_PRICE_ID_PRO_MONTHLY ?? null
+        : process.env.STRIPE_PRICE_ID_PRO_MONTHLY_TEST ?? null;
+
+    const yearlyPriceId = isProduction
+        ? process.env.STRIPE_PRICE_ID_PRO_YEARLY ?? null
+        : process.env.STRIPE_PRICE_ID_PRO_YEARLY_TEST ?? null;
+
+    const invoices = organisation?.stripe_customer_id
+        ? await getInvoices({ customerId: organisation.stripe_customer_id })
+        : [];
+
+    return (
+        <BillingView
+            currentPlan={currentPlan}
+            cadenceCopy={cadenceCopy}
+            renewalCopy={renewalCopy}
+            isFreePlan={isFreePlan}
+            cancelling={cancelling}
+            pricingConfigured={!!monthlyPriceId && !!yearlyPriceId}
+            invoices={invoices}
+            email={user.email ?? ""}
+            organisationId={organisation?.id ?? ""}
+            stripeCustomerId={organisation?.stripe_customer_id ?? null}
+            monthlyPriceId={monthlyPriceId}
+            yearlyPriceId={yearlyPriceId}
+        />
+    );
 }

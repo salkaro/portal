@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 
 
 export async function createBillingPortalUrl({ customerId }: { customerId: string }) {
-    const stripeAPIKey = isProduction ? process.env.STRIPE_API_KEY as string : process.env.TEST_STRIPE_API_KEY as string;
+    const stripeAPIKey = isProduction ? process.env.STRIPE_SECRET_KEY as string : process.env.STRIPE_SECRET_KEY_TEST as string;
 
     if (!stripeAPIKey) {
         throw new Error('Stripe api key not found');
@@ -29,7 +29,7 @@ export async function createBillingPortalUrl({ customerId }: { customerId: strin
 
 
 export async function createStripeCustomer({ email }: { email: string }) {
-    const stripeAPIKey = isProduction ? process.env.STRIPE_API_KEY as string : process.env.TEST_STRIPE_API_KEY as string;
+    const stripeAPIKey = isProduction ? process.env.STRIPE_SECRET_KEY as string : process.env.STRIPE_SECRET_KEY_TEST as string;
 
     if (!stripeAPIKey) {
         throw new Error('Stripe API key not found');
@@ -64,7 +64,7 @@ export async function createStripeCustomer({ email }: { email: string }) {
 
 
 export async function createCustomerSession({ customerId }: { customerId: string }) {
-    const stripeAPIKey = isProduction ? process.env.STRIPE_API_KEY as string: process.env.TEST_STRIPE_API_KEY as string;
+    const stripeAPIKey = isProduction ? process.env.STRIPE_SECRET_KEY as string : process.env.STRIPE_SECRET_KEY_TEST as string;
 
     if (!stripeAPIKey) {
         throw new Error('Stripe API key not found');

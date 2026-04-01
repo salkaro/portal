@@ -39,8 +39,11 @@ function normalizeJoinCode(code: string): string {
     return code.trim().toUpperCase()
 }
 
-export async function getCurrentUserOrganisation(userId: string): Promise<OrganisationWithApprovalResult> {
-    const supabase = createClient()
+export async function getCurrentUserOrganisation(
+    userId: string,
+    client?: ReturnType<typeof createClient>
+): Promise<OrganisationWithApprovalResult> {
+    const supabase = client ?? createClient()
 
     const { data, error } = await supabase
         .from('organisation_members')
@@ -106,8 +109,22 @@ export async function joinOrganisationByCode(input: {
     if (error) return { data: null, approved: false, error }
 
     const organisation = Array.isArray(data) ? (data[0] as Organisation | undefined) : null
+    if (!organisation) {
+        return {
+            data: null,
+            approved: false,
+            error: {
+                code: 'JOIN_CODE_INVALID',
+                details: '',
+                hint: '',
+                message: 'Invalid code',
+                name: 'PostgrestError',
+            },
+        }
+    }
+
     // Joined members always start pending — approved: false
-    return { data: organisation ?? null, approved: false, error: null }
+    return { data: organisation, approved: false, error: null }
 }
 
 export async function updateOrganisation(

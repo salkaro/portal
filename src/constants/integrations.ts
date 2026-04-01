@@ -35,8 +35,8 @@ export const INTEGRATION_CARD_DEFINITIONS: IntegrationCardDefinition[] = [
         description: 'Connect ClickUp workspaces and map tasks to your client portal updates.',
         imageForLightTheme: '/integrations/dark/clickup.svg',
         imageForDarkTheme: '/integrations/light/clickup.svg',
-        iconForLightTheme: '/integrations/dark/clickup.svg',
-        iconForDarkTheme: '/integrations/light/clickup.svg',
+        iconForLightTheme: '/integrations/dark/clickup-icon.svg',
+        iconForDarkTheme: '/integrations/light/clickup-icon.svg',
         enabled: false,
     },
     {
@@ -45,8 +45,8 @@ export const INTEGRATION_CARD_DEFINITIONS: IntegrationCardDefinition[] = [
         description: 'Bring project timelines and completion statuses directly to your clients.',
         imageForLightTheme: '/integrations/dark/asana.svg',
         imageForDarkTheme: '/integrations/light/asana.svg',
-        iconForLightTheme: '/integrations/dark/asana.svg',
-        iconForDarkTheme: '/integrations/light/asana.svg',
+        iconForLightTheme: '/integrations/dark/asana-icon.svg',
+        iconForDarkTheme: '/integrations/light/asana-icon.svg',
         enabled: false,
     },
     {

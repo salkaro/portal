@@ -11,6 +11,7 @@ type FeatureGuardProps = {
   freePlanRequired?: boolean;
   children: ReactNode;
   fallback?: ReactNode;
+  plan?: PlanTier;
 };
 
 export function FeatureGuard({
@@ -18,8 +19,9 @@ export function FeatureGuard({
   freePlanRequired = false,
   children,
   fallback = null,
+  plan,
 }: FeatureGuardProps) {
-  const userPlan = getCurrentUserPlanFromDatabase();
+  const userPlan = plan ?? getCurrentUserPlanFromDatabase();
 
   if (freePlanRequired && userPlan !== PLANS.FREE) {
     return <>{fallback}</>;

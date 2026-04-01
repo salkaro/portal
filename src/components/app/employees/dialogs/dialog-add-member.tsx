@@ -15,6 +15,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createOrganisationInvite } from "@/services/supabase/employees";
 
 type AddMemberDialogProps = {
@@ -41,7 +48,7 @@ export function AddMemberDialog({
 
   const submitDisabled = useMemo(() => {
     const value = Number(uses);
-    return !Number.isFinite(value) || value < 1;
+    return !Number.isFinite(value) || value < 1 || value > 5;
   }, [uses]);
 
   async function handleCreateInvite() {
@@ -110,17 +117,18 @@ export function AddMemberDialog({
           <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="invite-role">Role</Label>
-              <select
-                id="invite-role"
+              <Select
                 value={role}
-                onChange={(event) =>
-                  setRole(event.target.value as "admin" | "member")
-                }
-                className="h-7 w-full rounded-md border border-input bg-input/20 px-2 text-xs"
+                onValueChange={(value) => setRole(value as "admin" | "member")}
               >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
+                <SelectTrigger id="invite-role" className="w-full">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -129,8 +137,21 @@ export function AddMemberDialog({
                 id="invite-uses"
                 type="number"
                 min={1}
+                max={5}
                 value={uses}
-                onChange={(event) => setUses(event.target.value)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  if (next === "") {
+                    setUses("");
+                    return;
+                  }
+
+                  const numeric = Number(next);
+                  if (!Number.isFinite(numeric)) return;
+                  setUses(
+                    String(Math.min(5, Math.max(1, Math.floor(numeric)))),
+                  );
+                }}
               />
             </div>
 
@@ -140,7 +161,9 @@ export function AddMemberDialog({
                 id="invite-email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(limitInput(event.target.value, 254))}
+                onChange={(event) =>
+                  setEmail(limitInput(event.target.value, 254))
+                }
                 placeholder="member@company.com"
               />
             </div>
