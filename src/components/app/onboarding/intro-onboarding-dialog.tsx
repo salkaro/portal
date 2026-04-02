@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { TriangleAlertIcon } from "lucide-react";
 import { limitInput } from "@/utils/string";
 import { Button } from "@/components/ui/button";
 import { INTEGRATION_CARD_DEFINITIONS } from "@/constants/integrations";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useOrganisation } from "@/hooks/use-organisation";
+import { handleSignOut } from "@/lib/sign-out";
 import { IntegrationsStep } from "@/components/app/onboarding/steps/integrations-step";
 import { OrganisationStep } from "@/components/app/onboarding/steps/organisation-step";
 import { WelcomeStep } from "@/components/app/onboarding/steps/welcome-step";
@@ -32,6 +34,7 @@ import {
 type IntroOnboardingDialogProps = {
   open: boolean;
   initialStep?: number;
+  orgDeleted?: boolean;
   onOrganisationCreated: () => void;
   onOrganisationJoined: () => void;
 };
@@ -87,11 +90,12 @@ function getSuggestedOrganisationName(
 export function IntroOnboardingDialog({
   open,
   initialStep = 0,
+  orgDeleted = false,
   onOrganisationCreated,
   onOrganisationJoined,
 }: IntroOnboardingDialogProps) {
   const { user } = useCurrentUser();
-  const { createOrganisation, joinByCode } = useOrganisation();
+  const { createOrganisation, joinByCode, refetch } = useOrganisation();
 
   const [stepIndex, setStepIndex] = useState(initialStep);
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
@@ -191,6 +195,7 @@ export function IntroOnboardingDialog({
     }
 
     toast.success("Organisation created.");
+    await refetch();
     onOrganisationCreated();
     setIsSubmitting(false);
   }
@@ -220,6 +225,7 @@ export function IntroOnboardingDialog({
     }
 
     toast.success("Joined organisation.");
+    await refetch();
     onOrganisationJoined();
     setIsSubmitting(false);
   }
@@ -246,10 +252,28 @@ export function IntroOnboardingDialog({
               height={20}
               className="hidden rounded-md dark:block"
             />
-            <DialogTitle>{currentStep.title}</DialogTitle>
+            <DialogTitle>
+              {orgDeleted
+                ? "Rejoin or create an organisation"
+                : currentStep.title}
+            </DialogTitle>
           </div>
-          <DialogDescription>{currentStep.description}</DialogDescription>
+          <DialogDescription>
+            {orgDeleted
+              ? "Create a new workspace or join an existing one to continue."
+              : currentStep.description}
+          </DialogDescription>
         </DialogHeader>
+
+        {orgDeleted && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+            <TriangleAlertIcon className="mt-px size-3.5 shrink-0 text-foreground" />
+            <p>
+              Your organisation no longer exists. You can create a new one or
+              join another.
+            </p>
+          </div>
+        )}
 
         <div className="h-50 overflow-hidden">
           <div className={panelAnimationClass} key={stepIndex}>
@@ -283,47 +307,59 @@ export function IntroOnboardingDialog({
           <p className="text-xs text-destructive">{errorMessage}</p>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-              <circle
-                cx="7"
-                cy="7"
-                r={circleRadius}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-primary/25"
-              />
-              <circle
-                cx="7"
-                cy="7"
-                r={circleRadius}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray={circleCircumference}
-                strokeDashoffset={progressOffset}
-                transform="rotate(-90 7 7)"
-                className="text-primary"
-                style={{ transition: "stroke-dashoffset 280ms ease" }}
-              />
-            </svg>
-            <p className="text-xs font-medium text-muted-foreground">
-              Step {stepIndex + 1} of {INTRO_STEPS.length}
-            </p>
+        {!orgDeleted && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                <circle
+                  cx="7"
+                  cy="7"
+                  r={circleRadius}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-primary/25"
+                />
+                <circle
+                  cx="7"
+                  cy="7"
+                  r={circleRadius}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeDasharray={circleCircumference}
+                  strokeDashoffset={progressOffset}
+                  transform="rotate(-90 7 7)"
+                  className="text-primary"
+                  style={{ transition: "stroke-dashoffset 280ms ease" }}
+                />
+              </svg>
+              <p className="text-xs font-medium text-muted-foreground">
+                Step {stepIndex + 1} of {INTRO_STEPS.length}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex justify-between gap-2">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={stepIndex === 0 || isSubmitting || isTransitioning}
-          >
-            Back
-          </Button>
+          {orgDeleted || stepIndex === 0 ? (
+            <Button
+              variant="outline"
+              onClick={() => void handleSignOut(user?.id)}
+              disabled={isSubmitting}
+            >
+              Sign out
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={isSubmitting || isTransitioning}
+            >
+              Back
+            </Button>
+          )}
           {isLastStep ? (
             activeTab === "create" ? (
               <>

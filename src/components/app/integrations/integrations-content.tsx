@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   LinkIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  RefreshCcwIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -45,6 +47,7 @@ import {
 } from "@/components/ui/salkaro-table";
 import { useConnections } from "@/hooks/use-connections";
 import { useOrganisation } from "@/hooks/use-organisation";
+import { useRefreshCooldown } from "@/hooks/use-refresh-cooldown";
 import { formatDateTime } from "@/utils/format-dates";
 import {
   deleteConnectedAccount,
@@ -57,6 +60,16 @@ export function IntegrationsContent() {
   const { connections, loading, error, refetch } = useConnections();
   const { organisation } = useOrganisation();
   const { resolvedTheme } = useTheme();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { refresh, refreshing, disabled: refreshDisabled } = useRefreshCooldown(useCallback(async (silent: boolean) => { await refetch(silent) }, [refetch]));
+
+  useEffect(() => {
+    if (searchParams.get("connected") !== "1") return;
+    router.replace("/integrations", { scroll: false });
+    void refetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [deletingConnectionId, setDeletingConnectionId] = useState<
     string | null
   >(null);
@@ -160,9 +173,18 @@ export function IntegrationsContent() {
   }
 
   return (
-    <section className={`space-y-4 ${loading ? 'py-6': ''}`}>
+    <section className={`space-y-4 ${loading ? "" : "py-6"}`}>
       {connectedIntegrations.length > 0 && (
         <div className="flex items-start justify-end gap-3">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Refresh integrations"
+            disabled={refreshDisabled}
+            onClick={() => void refresh()}
+          >
+            <RefreshCcwIcon className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
+          </Button>
           <Button asChild size="sm" variant="outline">
             <Link href="/integrations/browse">Browse integrations</Link>
           </Button>

@@ -21,10 +21,11 @@ import {
   type SalkaroColumn,
 } from "@/components/ui/salkaro-table";
 import { ActivitySkeleton } from "@/components/app/activity/activity-skeleton";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PLANS, PRO_PLAN_LIMITS } from "@/constants/plans";
 import { SETTINGS_ROUTES } from "@/constants/routes";
 import { useActivityEvents } from "@/hooks/use-activity-events";
+import { useRefreshCooldown } from "@/hooks/use-refresh-cooldown";
 import { useOrganisation } from "@/hooks/use-organisation";
 import {
   readSessionCache,
@@ -124,7 +125,7 @@ function actorTypeBadge(type: PortalEvent["actor_type"]) {
 export function ActivityContent() {
   const { organisation } = useOrganisation();
   const { events, loading, error, refetch } = useActivityEvents();
-  const [refreshing, setRefreshing] = useState(false);
+  const { refresh, refreshing, disabled: refreshDisabled } = useRefreshCooldown(useCallback(async (silent: boolean) => { await refetch(silent) }, [refetch]));
   const [portalNamesById, setPortalNamesById] = useState<
     Record<string, string>
   >({});
@@ -283,15 +284,6 @@ export function ActivityContent() {
     },
   ];
 
-  async function handleRefresh() {
-    setRefreshing(true);
-
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }
 
   if (loading && events.length === 0) {
     return <ActivitySkeleton />;
@@ -344,7 +336,7 @@ export function ActivityContent() {
                   <Link href={SETTINGS_ROUTES.BILLING}>Upgrade to Pro</Link>
                 </Button>
               ) : (
-                <Button onClick={() => void handleRefresh()} variant="outline">
+                <Button onClick={() => void refresh()} variant="outline" disabled={refreshDisabled}>
                   <RefreshCcwIcon className="size-4" />
                   Retry
                 </Button>
@@ -364,11 +356,11 @@ export function ActivityContent() {
         rowKey={(event) => event.id}
         headerRight={
           <Button
-            onClick={() => void handleRefresh()}
+            onClick={() => void refresh()}
             variant="outline"
             size="icon-sm"
             aria-label="Refresh activity"
-            disabled={refreshing}
+            disabled={refreshDisabled}
           >
             <RefreshCcwIcon
               className={`size-3 ${refreshing ? "animate-spin" : ""}`}

@@ -8,9 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { AvatarCropDialog } from "@/components/app/settings/general/avatar-crop-dialog";
+import { DeleteAccountDialog } from "@/components/app/settings/general/delete-account-dialog";
 import { GeneralSettingsSkeleton } from "@/components/app/settings/general/general-settings-skeleton";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useOrganisation } from "@/hooks/use-organisation";
+import { useOrganisationMembers } from "@/hooks/use-organisation-members";
 import { updateCurrentUserProfile } from "@/services/auth";
 import { uploadAvatarDataUrl } from "@/services/supabase/avatar-storage";
 import { formatDateTime } from "@/utils/format-dates";
@@ -90,6 +94,8 @@ function getInitials(
 
 export function GeneralSettingsContent() {
   const { user, loading } = useCurrentUser();
+  const { organisation } = useOrganisation();
+  const { members } = useOrganisationMembers(organisation?.id);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fullNameDraft, setFullNameDraft] = useState("");
   const [avatarUrlDraft, setAvatarUrlDraft] = useState("");
@@ -99,6 +105,12 @@ export function GeneralSettingsContent() {
   const [saveError, setSaveError] = useState("");
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [pendingCropImage, setPendingCropImage] = useState("");
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const isOwner = useMemo(
+    () => members.find((m) => m.user_id === user?.id)?.role === "owner",
+    [members, user?.id],
+  );
 
   const fullNameFromUser =
     (user?.user_metadata?.full_name as string | undefined) ?? "";
@@ -311,6 +323,35 @@ export function GeneralSettingsContent() {
         imageSrc={pendingCropImage}
         onCancel={handleCropCancel}
         onApply={handleCropApply}
+      />
+
+      <Separator />
+
+      <div className="space-y-3">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+          Danger zone
+        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium">Delete account</p>
+            <p className="text-[11px] text-muted-foreground">
+              Permanently delete your account. This cannot be undone.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            Delete account
+          </Button>
+        </div>
+      </div>
+
+      <DeleteAccountDialog
+        open={isDeleteOpen}
+        isOwner={isOwner ?? false}
+        onClose={() => setIsDeleteOpen(false)}
       />
     </div>
   );

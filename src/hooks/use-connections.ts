@@ -13,7 +13,7 @@ type UseConnectionsResult = {
     connections: ConnectedAccount[]
     loading: boolean
     error: PostgrestError | null
-    refetch: () => Promise<void>
+    refetch: (silent?: boolean) => Promise<void>
 }
 
 const cache = new Map<string, ConnectedAccount[]>()
@@ -37,7 +37,7 @@ export function useConnections(): UseConnectionsResult {
     const [loading, setLoading] = useState(cached === null)
     const [error, setError] = useState<PostgrestError | null>(null)
 
-    const refetch = useCallback(async () => {
+    const refetch = useCallback(async (silent = false) => {
         if (!organisationId) {
             setConnections([])
             setError(null)
@@ -45,7 +45,7 @@ export function useConnections(): UseConnectionsResult {
             return
         }
 
-        setLoading(true)
+        if (!silent) setLoading(true)
         const result = await getConnectedAccounts(organisationId)
 
         if (!result.error) {

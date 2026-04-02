@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { PlusIcon, TicketIcon, UsersRoundIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { PlusIcon, RefreshCcwIcon, TicketIcon, UsersRoundIcon } from "lucide-react";
 import {
   NotAuthorised,
   NotAuthorisedNoOrganisation,
@@ -14,6 +14,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useOrganisation } from "@/hooks/use-organisation";
 import { useOrganisationInvites } from "@/hooks/use-organisation-invites";
 import { useOrganisationMembers } from "@/hooks/use-organisation-members";
+import { useRefreshCooldown } from "@/hooks/use-refresh-cooldown";
 import { EmployeeTable } from "@/components/app/employees/employee-table";
 import { AddMemberDialog } from "@/components/app/employees/dialogs/dialog-add-member";
 import { ActiveInviteCodesDialog } from "@/components/app/employees/dialogs/dialog-active-invite-codes";
@@ -45,6 +46,11 @@ export function EmployeesContent() {
 
   const [showAddMember, setShowAddMember] = useState(false);
   const [showInviteCodes, setShowInviteCodes] = useState(false);
+
+  const handleRefresh = useCallback(async (silent: boolean) => {
+    await Promise.all([refetchMembers(silent), refetchInvites(silent)]);
+  }, [refetchMembers, refetchInvites]);
+  const { refresh, refreshing, disabled: refreshDisabled } = useRefreshCooldown(handleRefresh);
 
   const currentMembership = useMemo(
     () => members.find((member) => member.user_id === user?.id),
@@ -105,14 +111,25 @@ export function EmployeesContent() {
           Active Invite Codes
         </Button>
 
-        <Button
-          size="sm"
-          onClick={() => setShowAddMember(true)}
-          disabled={!canManageMembers || maxMemberCountHit || maxInviteCountHit}
-        >
-          <PlusIcon />
-          Add Member
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Refresh members"
+            disabled={refreshDisabled}
+            onClick={() => void refresh()}
+          >
+            <RefreshCcwIcon className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setShowAddMember(true)}
+            disabled={!canManageMembers || maxMemberCountHit || maxInviteCountHit}
+          >
+            <PlusIcon />
+            Add Member
+          </Button>
+        </div>
       </div>
 
       <Separator />
@@ -157,7 +174,11 @@ export function EmployeesContent() {
         organisationId={organisation.id}
         inviteLimit={inviteLimit}
         onClose={() => setShowAddMember(false)}
-        onCreated={refetchInvites}
+        onCreated={async () => {
+          await refetchInvites();
+          setShowAddMember(false);
+          setShowInviteCodes(true);
+        }}
       />
     </section>
   );

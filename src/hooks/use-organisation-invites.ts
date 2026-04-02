@@ -27,7 +27,7 @@ export function useOrganisationInvites(organisationId: string | null | undefined
     const [loading, setLoading] = useState(cached === null)
     const [error, setError] = useState<PostgrestError | null>(null)
 
-    const refetch = useCallback(async () => {
+    const refetch = useCallback(async (silent = false) => {
         if (!organisationId) {
             setInvites([])
             setError(null)
@@ -35,7 +35,7 @@ export function useOrganisationInvites(organisationId: string | null | undefined
             return
         }
 
-        setLoading(true)
+        if (!silent) setLoading(true)
         const result = await getOrganisationInvites(organisationId)
 
         if (!result.error) {

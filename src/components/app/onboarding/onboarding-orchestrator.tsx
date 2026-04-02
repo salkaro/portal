@@ -16,13 +16,32 @@ export function OnboardingOrchestrator() {
   const { organisation, loading: organisationLoading } = useOrganisation();
   const { stage, loading: onboardingLoading, setStage } = useOnboardingState();
 
-  useEffect(() => {
-    if (!user || !organisation || !stage) return;
+  const COMPLETED_STAGES: string[] = [
+    ONBOARDING_STAGES.INTRO_COMPLETED,
+    ONBOARDING_STAGES.ORG_CREATED_TOUR_PENDING,
+    ONBOARDING_STAGES.ORG_CREATED_TOUR_COMPLETED,
+    ONBOARDING_STAGES.JOINED_ORG_SKIP,
+  ];
 
-    if (stage === ONBOARDING_STAGES.INTRO_PENDING) {
-      setStage(ONBOARDING_STAGES.INTRO_COMPLETED, null);
+  useEffect(() => {
+    if (!user || !stage || organisationLoading) return;
+
+    if (organisation) {
+      if (stage === ONBOARDING_STAGES.INTRO_PENDING) {
+        setStage(ONBOARDING_STAGES.INTRO_COMPLETED, null);
+      }
+      // Clear the org-deleted state now that they have an org again
+      if (stage === ONBOARDING_STAGES.ORG_DELETED) {
+        setStage(ONBOARDING_STAGES.INTRO_COMPLETED, null);
+      }
+      return;
     }
-  }, [organisation, setStage, stage, user]);
+
+    // User has no organisation but previously completed onboarding — org was deleted
+    if (COMPLETED_STAGES.includes(stage)) {
+      setStage(ONBOARDING_STAGES.ORG_DELETED, null);
+    }
+  }, [organisation, organisationLoading, setStage, stage, user]);
 
   if (userLoading || organisationLoading || onboardingLoading) {
     return null;
@@ -33,8 +52,10 @@ export function OnboardingOrchestrator() {
   }
 
   const hasOrganisation = Boolean(organisation);
+  const orgDeleted = stage === ONBOARDING_STAGES.ORG_DELETED;
   const showIntro =
     !hasOrganisation &&
+    !orgDeleted &&
     (stage === ONBOARDING_STAGES.INTRO_PENDING ||
       stage === ONBOARDING_STAGES.INTRO_COMPLETED);
   const introInitialStep = stage === ONBOARDING_STAGES.INTRO_COMPLETED ? 2 : 0;
@@ -47,6 +68,25 @@ export function OnboardingOrchestrator() {
         key={`intro-${showIntro ? "open" : "closed"}-${introInitialStep}`}
         open={showIntro}
         initialStep={introInitialStep}
+        onOrganisationCreated={() => {
+          setStage(
+            ONBOARDING_STAGES.ORG_CREATED_TOUR_PENDING,
+            ONBOARDING_SOURCE_ACTIONS.CREATE,
+          );
+        }}
+        onOrganisationJoined={() => {
+          setStage(
+            ONBOARDING_STAGES.JOINED_ORG_SKIP,
+            ONBOARDING_SOURCE_ACTIONS.JOIN,
+          );
+        }}
+      />
+
+      <IntroOnboardingDialog
+        key={`org-deleted-${orgDeleted ? "open" : "closed"}`}
+        open={orgDeleted}
+        initialStep={2}
+        orgDeleted
         onOrganisationCreated={() => {
           setStage(
             ONBOARDING_STAGES.ORG_CREATED_TOUR_PENDING,

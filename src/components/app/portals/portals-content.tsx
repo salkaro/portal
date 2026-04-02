@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { RefreshCcwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -10,6 +11,7 @@ import {
 import { useConnections } from "@/hooks/use-connections";
 import { useOrganisation } from "@/hooks/use-organisation";
 import { usePortals } from "@/hooks/use-portals";
+import { useRefreshCooldown } from "@/hooks/use-refresh-cooldown";
 import { PLAN_LIMITS } from "@/constants/plans";
 import { PortalsEmptyState } from "@/components/app/portals/portals-empty-state";
 import { PortalsList } from "@/components/app/portals/portals-list";
@@ -32,6 +34,11 @@ export function PortalsContent() {
     refetch: refetchPortals,
   } = usePortals();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const handleRefresh = useCallback(async (silent: boolean) => {
+    await Promise.all([refetchPortals(silent), refetchConnections(silent)]);
+  }, [refetchPortals, refetchConnections]);
+  const { refresh, refreshing, disabled: refreshDisabled } = useRefreshCooldown(handleRefresh);
 
   const mondayConnections = useMemo(() => {
     return connections.filter((connection) => connection.provider === "monday");
@@ -71,6 +78,15 @@ export function PortalsContent() {
     <section className="space-y-4 py-6">
       {portals.length > 0 && (
         <div className="flex items-start justify-end gap-3">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Refresh portals"
+            disabled={refreshDisabled}
+            onClick={() => void refresh()}
+          >
+            <RefreshCcwIcon className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
+          </Button>
           {atLimit ? (
             <Tooltip>
               <TooltipTrigger asChild>

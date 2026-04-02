@@ -91,7 +91,7 @@ export function useOrganisation(): UseOrganisationResult {
         isCacheValid ? cachedOrganisation : null
     )
     const [pendingApproval, setPendingApproval] = useState<boolean>(
-        isCacheValid ? !cachedApproved : false
+        isCacheValid ? (!cachedApproved && cachedOrganisation !== null) : false
     )
     const [loading, setLoading] = useState(!isCacheValid)
     const [error, setError] = useState<PostgrestError | null>(null)
@@ -138,7 +138,7 @@ export function useOrganisation(): UseOrganisationResult {
 
         let cancelled = false
 
-        // Serve from cache immediately if valid
+        // Serve from cache immediately if valid, then revalidate in background
         if (user?.id === cacheUserId && cachedOrganisation !== undefined) {
             queueMicrotask(() => {
                 if (cancelled) return
@@ -146,6 +146,20 @@ export function useOrganisation(): UseOrganisationResult {
                 setPendingApproval(!cachedApproved && cachedOrganisation !== null)
                 setLoading(false)
             })
+
+            // Still revalidate in background so approval/deletion changes are picked up
+            const revalidate = async () => {
+                if (!user) return
+                const result = await getCurrentUserOrganisation(user.id)
+                if (cancelled) return
+                if (!result.error) {
+                    persistOrganisationCache(user.id, result.data, result.approved)
+                }
+                setOrganisation(result.data)
+                setPendingApproval(!result.approved && result.data !== null)
+            }
+            void revalidate()
+
             return () => { cancelled = true }
         }
 

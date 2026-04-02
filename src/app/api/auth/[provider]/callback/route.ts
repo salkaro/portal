@@ -79,6 +79,7 @@ export async function GET(
             metadata,
         })
 
+        redirectUrl.searchParams.set('connected', '1')
         const response = NextResponse.redirect(redirectUrl)
         response.cookies.delete(`oauth_state_${config.provider}`)
 

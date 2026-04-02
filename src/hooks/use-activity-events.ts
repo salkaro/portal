@@ -11,7 +11,7 @@ type UseActivityEventsResult = {
     events: PortalEvent[]
     loading: boolean
     error: Error | null
-    refetch: () => Promise<void>
+    refetch: (silent?: boolean) => Promise<void>
 }
 
 // Module-level cache for smoother navigation
@@ -38,7 +38,7 @@ export function useActivityEvents(): UseActivityEventsResult {
     const [loading, setLoading] = useState(cached === null)
     const [error, setError] = useState<Error | null>(null)
 
-    const refetch = useCallback(async () => {
+    const refetch = useCallback(async (silent = false) => {
         if (!organisationId) {
             setEvents([])
             setError(null)
@@ -56,7 +56,7 @@ export function useActivityEvents(): UseActivityEventsResult {
             return
         }
 
-        setLoading(true)
+        if (!silent) setLoading(true)
 
         try {
             const data = await fetchActivityEvents()

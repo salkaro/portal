@@ -7,6 +7,7 @@ export const ONBOARDING_STAGES = {
     ORG_CREATED_TOUR_PENDING: "org_created_tour_pending",
     ORG_CREATED_TOUR_COMPLETED: "org_created_tour_completed",
     JOINED_ORG_SKIP: "joined_org_skip",
+    ORG_DELETED: "org_deleted",
 } as const;
 
 export type OnboardingStage =
