@@ -58,7 +58,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1">
           <h1 className="text-lg font-semibold">Sign in to Portal</h1>
@@ -106,6 +106,11 @@ export function LoginForm() {
             />
           </div>
 
+          <div className="flex justify-end">
+            <Link href={ROUTES.RESET} className="text-xs text-muted-foreground underline underline-offset-3 hover:text-foreground">
+              Forgot password?
+            </Link>
+          </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {activeAction === "email" ? <Spinner /> : null}
             Sign in

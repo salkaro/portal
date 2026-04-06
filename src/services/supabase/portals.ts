@@ -99,6 +99,8 @@ function isSameImportConfig(current: PortalImportConfig, next: PortalImportConfi
 function isSameCustomization(current: PortalCustomization, next: PortalCustomization): boolean {
     return (
         (current.tagline ?? null) === (next.tagline ?? null) &&
+        (current.projectOwner ?? null) === (next.projectOwner ?? null) &&
+        (current.organisationName ?? null) === (next.organisationName ?? null) &&
         current.showStatusSection === next.showStatusSection &&
         current.showTimelineSection === next.showTimelineSection &&
         current.showOwnersSection === next.showOwnersSection

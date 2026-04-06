@@ -64,6 +64,14 @@ const OAUTH_PROVIDER_CONFIG: Record<IntegrationProvider, OAuthProviderConfig> = 
         clientIdEnv: 'LINEAR_CLIENT_ID',
         clientSecretEnv: 'LINEAR_CLIENT_SECRET',
     },
+    jira: {
+        provider: 'jira',
+        authUrl: 'https://auth.atlassian.com/authorize',
+        tokenUrl: 'https://auth.atlassian.com/oauth/token',
+        scopes: ['read:jira-work', 'offline_access'],
+        clientIdEnv: 'JIRA_CLIENT_ID',
+        clientSecretEnv: 'JIRA_CLIENT_SECRET',
+    },
 }
 
 function getRequiredEnv(name: string): string {

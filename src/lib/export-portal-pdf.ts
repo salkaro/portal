@@ -27,7 +27,7 @@ function formatDate(text: string): string {
   const dateStr = text.includes(" - ") ? text.split(" - ")[1] : text;
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return text;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function formatTimeline(text: string): string {
@@ -37,8 +37,8 @@ function formatTimeline(text: string): string {
   const s = new Date(start);
   const e = new Date(end);
   if (isNaN(s.getTime()) || isNaN(e.getTime())) return text;
-  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  return `${fmt(s)} → ${fmt(e)}`;
+  const fmt = (d: Date) => d.toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
+  return `${fmt(s)} – ${fmt(e)}`;
 }
 
 function getCellText(type: string, text: string): string {
@@ -145,7 +145,7 @@ export async function exportPortalPdf(
   }
 
   // Date stamp top-right
-  const dateStr = new Date().toLocaleDateString(undefined, {
+  const dateStr = new Date().toLocaleDateString("en-GB", {
     month: "long", day: "numeric", year: "numeric",
   });
   doc.setFont("helvetica", "normal");
@@ -245,6 +245,13 @@ export async function exportPortalPdf(
     const group = groupMap.get(groupId)!;
     const groupStats = getCompletionStats(group.items);
 
+    // Estimate height: heading (12) + header row (10) + rows (~10 each), min 2 rows visible
+    const estimatedHeight = 12 + 10 + Math.min(group.items.length, 2) * 10;
+    if (y + estimatedHeight > pageH - margin) {
+      doc.addPage();
+      y = margin;
+    }
+
     sectionHeading(`${group.title}  ·  ${group.items.length} items  ·  ${groupStats.donePercent}% complete`);
 
     const head = [
@@ -270,6 +277,7 @@ export async function exportPortalPdf(
       startY: y,
       head,
       body,
+      rowPageBreak: "avoid",
       margin: { left: margin, right: margin },
       styles: {
         fontSize: 8,

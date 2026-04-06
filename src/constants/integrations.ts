@@ -3,6 +3,7 @@ export const INTEGRATION_PROVIDERS = [
     'clickup',
     'asana',
     'linear',
+    'jira',
 ] as const
 
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDERS)[number]
@@ -28,6 +29,16 @@ export const INTEGRATION_CARD_DEFINITIONS: IntegrationCardDefinition[] = [
         iconForLightTheme: '/integrations/dark/monday-icon.svg',
         iconForDarkTheme: '/integrations/light/monday-icon.svg',
         enabled: true,
+    }, 
+    {
+        provider: 'jira',
+        title: 'Jira',
+        description: 'Keep clients updated on issue progress and sprint milestones with Jira integration.',
+        imageForLightTheme: '/integrations/dark/jira.svg',
+        imageForDarkTheme: '/integrations/light/jira.svg',
+        iconForLightTheme: '/integrations/dark/jira-icon.svg',
+        iconForDarkTheme: '/integrations/light/jira-icon.svg',
+        enabled: false,
     },
     {
         provider: 'clickup',
@@ -56,7 +67,7 @@ export const INTEGRATION_CARD_DEFINITIONS: IntegrationCardDefinition[] = [
         imageForLightTheme: '/integrations/dark/linear.svg',
         imageForDarkTheme: '/integrations/light/linear.svg',
         iconForLightTheme: '/integrations/dark/linear-icon.svg',
-        iconForDarkTheme: '/integrations/light/linear.svg',
+        iconForDarkTheme: '/integrations/light/linear-icon.svg',
         enabled: false,
     },
 ]

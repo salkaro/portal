@@ -38,6 +38,8 @@ type PortalPayload = {
     showStatusSection: boolean;
     showTimelineSection: boolean;
     showOwnersSection: boolean;
+    projectOwner: string | null;
+    organisationName: string | null;
   } | null;
   access_type: PortalAccessType;
   hasInstantAccess: boolean;

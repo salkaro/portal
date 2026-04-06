@@ -77,7 +77,7 @@ export function PortalsContent() {
   return (
     <section className="space-y-4 py-6">
       {portals.length > 0 && (
-        <div className="flex items-start justify-end gap-3">
+        <div className="flex items-center justify-end gap-3">
           <Button
             variant="outline"
             size="icon-sm"

@@ -50,7 +50,7 @@ function MilestoneRow({ item, isOverdue }: MilestoneRowProps) {
 
   const iconProps = {
     done: { Icon: CheckCircle2, className: "text-green-500" },
-    in_progress: { Icon: Settings, className: "text-blue-500 animate-spin" },
+    in_progress: { Icon: Settings, className: "text-blue-500 animate-[spin_3s_linear_infinite]" },
     delayed: { Icon: AlertTriangle, className: "text-destructive" },
     pending: { Icon: Circle, className: "text-muted-foreground" },
   }[state];

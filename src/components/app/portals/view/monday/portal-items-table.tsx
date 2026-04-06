@@ -78,6 +78,8 @@ type GroupTableProps = {
 function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProps) {
   const { donePercent } = getCompletionStats(items);
 
+  console.log(items)
+
   // Identify the client-relevant columns: status, date/timeline, people
   const statusCol = columns.find((c) => c.type === "status");
   const dateCol = columns.find((c) => c.type === "date" || c.type === "timeline");
@@ -179,9 +181,13 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
       searchPlaceholder="Search tasks..."
       pageSize={10}
       onRowClick={(item) => {
-        if (item.subitems.length > 0) onSelectItem(item);
+        const hasText = item.columnValues.some((cv) => (cv.type === "text" || cv.type === "long_text") && cv.text?.trim());
+        if (item.subitems.length > 0 || hasText) onSelectItem(item);
       }}
-      rowClassName={(item) => (item.subitems.length === 0 ? "cursor-default" : undefined)}
+      rowClassName={(item) => {
+        const hasText = item.columnValues.some((cv) => (cv.type === "text" || cv.type === "long_text") && cv.text?.trim());
+        return item.subitems.length === 0 && !hasText ? "cursor-default" : undefined;
+      }}
       emptyMessage="No tasks in this group."
     />
   );

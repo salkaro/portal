@@ -1,5 +1,6 @@
 import { SignupForm } from "@/components/auth/signup-form";
 import { pageMetadata } from "@/lib/metadata";
+import { Suspense } from "react";
 
 export const metadata = pageMetadata(
   "Get Started",
@@ -7,5 +8,9 @@ export const metadata = pageMetadata(
 );
 
 export default function GetStartedPage() {
-  return <SignupForm />;
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
 }

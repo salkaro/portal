@@ -65,6 +65,8 @@ export function PortalCreateDialog({
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [selectedColumnIds, setSelectedColumnIds] = useState<string[]>([]);
   const [tagline, setTagline] = useState("");
+  const [projectOwner, setProjectOwner] = useState("");
+  const [organisationName, setOrganisationName] = useState("");
   const [showStatusSection, setShowStatusSection] = useState(true);
   const [showTimelineSection, setShowTimelineSection] = useState(true);
   const [showOwnersSection, setShowOwnersSection] = useState(false);
@@ -129,6 +131,8 @@ export function PortalCreateDialog({
     setSelectedBoardId("");
     setSelectedColumnIds([]);
     setTagline("");
+    setProjectOwner("");
+    setOrganisationName("");
     setShowStatusSection(true);
     setShowTimelineSection(true);
     setShowOwnersSection(false);
@@ -177,6 +181,8 @@ export function PortalCreateDialog({
       },
       customization: {
         tagline: tagline.trim() || null,
+        projectOwner: projectOwner.trim() || null,
+        organisationName: organisationName.trim() || null,
         showStatusSection,
         showTimelineSection,
         showOwnersSection,
@@ -347,6 +353,26 @@ export function PortalCreateDialog({
                 value={tagline}
                 onChange={(event) => setTagline(limitInput(event.target.value, 64))}
                 placeholder="A concise project summary your client will see at the top of the portal"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="portal-project-owner">Project owner</Label>
+              <Input
+                id="portal-project-owner"
+                value={projectOwner}
+                onChange={(e) => setProjectOwner(limitInput(e.target.value, 64))}
+                placeholder="e.g. Jane Smith"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="portal-org-name">Agency name</Label>
+              <Input
+                id="portal-org-name"
+                value={organisationName}
+                onChange={(e) => setOrganisationName(limitInput(e.target.value, 64))}
+                placeholder="e.g. Salkaro Agency"
               />
             </div>
 

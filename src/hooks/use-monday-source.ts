@@ -12,7 +12,7 @@ type UseMondaySourceResult = {
     loadingColumns: boolean
     errorMessage: string | null
     loadBoards: (connectionId: string) => Promise<void>
-    loadColumns: (connectionId: string, boardId: string) => Promise<void>
+    loadColumns: (connectionId: string, boardId: string, bust?: boolean) => Promise<void>
 }
 
 function getBoardsCacheKey(connectionId: string): string {
@@ -54,13 +54,17 @@ export function useMondaySource(): UseMondaySourceResult {
         }
     }, [])
 
-    const loadColumns = useCallback(async (connectionId: string, boardId: string) => {
+    const loadColumns = useCallback(async (connectionId: string, boardId: string, bust = false) => {
         const cacheKey = getColumnsCacheKey(connectionId, boardId)
-        const cachedColumns = sessionStorage.getItem(cacheKey)
 
-        if (cachedColumns) {
-            setColumns(JSON.parse(cachedColumns) as MondayBoardColumn[])
-            return
+        if (!bust) {
+            const cachedColumns = sessionStorage.getItem(cacheKey)
+            if (cachedColumns) {
+                setColumns(JSON.parse(cachedColumns) as MondayBoardColumn[])
+                return
+            }
+        } else {
+            sessionStorage.removeItem(cacheKey)
         }
 
         setLoadingColumns(true)

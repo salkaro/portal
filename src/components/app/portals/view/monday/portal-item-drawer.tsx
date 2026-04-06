@@ -72,6 +72,10 @@ export function PortalItemDrawer({ item, open, onClose }: PortalItemDrawerProps)
   const total = subitems.length;
   const percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
+  const textColumns = (item?.columnValues ?? []).filter(
+    (cv) => (cv.type === "text" || cv.type === "long_text") && cv.text?.trim()
+  );
+
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col gap-0 p-0">
@@ -87,6 +91,19 @@ export function PortalItemDrawer({ item, open, onClose }: PortalItemDrawerProps)
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {textColumns.length > 0 && (
+            <div className="space-y-2">
+              {textColumns.map((cv) => (
+                <div key={cv.columnId} className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
+                  <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                    {cv.title}
+                  </p>
+                  <p className="text-xs text-foreground">{cv.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {total > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -102,15 +119,15 @@ export function PortalItemDrawer({ item, open, onClose }: PortalItemDrawerProps)
             </div>
           )}
 
-          {total === 0 ? (
-            <p className="text-xs text-muted-foreground">No subtasks for this item.</p>
-          ) : (
+          {total === 0 && textColumns.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No details for this item.</p>
+          ) : total > 0 ? (
             <div className="space-y-2">
               {subitems.map((sub) => (
                 <SubitemRow key={sub.id} subitem={sub} />
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </SheetContent>
     </Sheet>

@@ -1,3 +1,4 @@
+import { ResetForm } from "@/components/auth/reset-form";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata(
@@ -5,6 +6,12 @@ export const metadata = pageMetadata(
   "Reset your Salkaro Portal account password.",
 );
 
-export default function Reset() {
-  return <div></div>;
+export default async function ResetPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error_code?: string; verified?: string }>;
+}) {
+  const { error_code, verified } = await searchParams;
+
+  return <ResetForm linkError={error_code ?? null} isUpdateMode={verified === '1'} />;
 }

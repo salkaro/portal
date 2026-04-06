@@ -13,6 +13,8 @@ export type PortalCustomization = {
     showStatusSection: boolean
     showTimelineSection: boolean
     showOwnersSection: boolean
+    projectOwner: string | null
+    organisationName: string | null
 }
 
 export type Portal = {
@@ -37,4 +39,6 @@ export const DEFAULT_PORTAL_CUSTOMIZATION: PortalCustomization = {
     showStatusSection: true,
     showTimelineSection: true,
     showOwnersSection: false,
+    projectOwner: null,
+    organisationName: null,
 }

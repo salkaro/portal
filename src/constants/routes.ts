@@ -3,6 +3,9 @@ export const ROUTES = {
     HOME: '/',
     LOGIN: '/login',
     GET_STARTED: '/get-started',
+    WAITLIST: '/waitlist',
+    RESET: '/reset',
+    DEMO: '/demo',
 
     // Main
     DASHBOARD: '/dashboard',

@@ -42,6 +42,20 @@ export async function signInWithGoogle(): Promise<AuthResult<{ url: string | nul
     return { data: { url: data.url }, error: null }
 }
 
+export async function requestPasswordReset(email: string): Promise<{ error: AuthError | null }> {
+    const supabase = createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: process.env.NEXT_PUBLIC_APP_URL + '/api/auth/callback?type=recovery',
+    })
+    return { error }
+}
+
+export async function updatePassword(password: string): Promise<{ error: AuthError | null }> {
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password })
+    return { error }
+}
+
 export async function signOut(): Promise<{ data: null; error: AuthError | null }> {
     const supabase = createClient()
     const { error } = await supabase.auth.signOut()

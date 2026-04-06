@@ -90,15 +90,17 @@ export function PortalsList({
 
   // Display tab
   const [tagline, setTagline] = useState("");
+  const [projectOwner, setProjectOwner] = useState("");
+  const [organisationName, setOrganisationName] = useState("");
   const [showStatusSection, setShowStatusSection] = useState(true);
   const [showTimelineSection, setShowTimelineSection] = useState(true);
   const [showOwnersSection, setShowOwnersSection] = useState(false);
 
-  // Load columns when edit dialog opens
+  // Load columns when edit dialog opens, busting cache to pick up new board columns
   useEffect(() => {
     if (!editingPortal) return;
     const { connection_id, import_config } = editingPortal;
-    void loadColumns(connection_id, import_config.boardId);
+    void loadColumns(connection_id, import_config.boardId, true);
   }, [editingPortal, loadColumns]);
 
   function openEdit(portal: Portal) {
@@ -107,6 +109,8 @@ export function PortalsList({
     setPortalStatusDraft(portal.status === "active" ? "active" : "draft");
     setSelectedColumnIds(portal.import_config.selectedColumnIds);
     setTagline(portal.customization.tagline ?? "");
+    setProjectOwner(portal.customization.projectOwner ?? "");
+    setOrganisationName(portal.customization.organisationName ?? "");
     setShowStatusSection(portal.customization.showStatusSection);
     setShowTimelineSection(portal.customization.showTimelineSection);
     setShowOwnersSection(portal.customization.showOwnersSection);
@@ -149,6 +153,8 @@ export function PortalsList({
         portalId: editingPortal.id,
         customization: {
           tagline: tagline.trim() || null,
+          projectOwner: projectOwner.trim() || null,
+          organisationName: organisationName.trim() || null,
           showStatusSection,
           showTimelineSection,
           showOwnersSection,
@@ -387,6 +393,26 @@ export function PortalsList({
 
             {/* Sections */}
             <TabsContent value="display" className="space-y-3 pt-3">
+              <div className="space-y-2">
+                <Label htmlFor="edit-project-owner">Project owner</Label>
+                <Input
+                  id="edit-project-owner"
+                  value={projectOwner}
+                  onChange={(e) => setProjectOwner(limitInput(e.target.value, 64))}
+                  placeholder="e.g. Jane Smith"
+                  disabled={saving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-org-name">Agency name</Label>
+                <Input
+                  id="edit-org-name"
+                  value={organisationName}
+                  onChange={(e) => setOrganisationName(limitInput(e.target.value, 64))}
+                  placeholder="e.g. Salkaro Agency"
+                  disabled={saving}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-tagline">Tagline</Label>
                 <p className="text-xs text-muted-foreground">

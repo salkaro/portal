@@ -13,6 +13,7 @@ export const MONDAY_IMPORTABLE_COLUMN_TYPES = [
     'timeline',
     'people',
     'text',
+    'long_text',
     'numbers',
 ] as const
 
