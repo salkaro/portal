@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MenuIcon, XIcon } from "lucide-react";
 import { Button } from "@salkaro/ui";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -51,10 +52,10 @@ export function LandingNav() {
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`${PORTAL_URL}/login`}>Sign in</Link>
+            <Link href={`${PORTAL_URL}/login`} onClick={() => trackEvent("signin_click", { location: "nav" })}>Sign in</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href={`${PORTAL_URL}/waitlist`}>Join waitlist</Link>
+            <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "nav" })}>Join waitlist</Link>
           </Button>
         </div>
 
@@ -84,10 +85,10 @@ export function LandingNav() {
           ))}
           <div className="pt-2 flex flex-col gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link href={`${PORTAL_URL}/login`}>Sign in</Link>
+              <Link href={`${PORTAL_URL}/login`} onClick={() => trackEvent("signin_click", { location: "nav" })}>Sign in</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link href={`${PORTAL_URL}/waitlist`}>Join waitlist</Link>
+              <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "nav" })}>Join waitlist</Link>
             </Button>
           </div>
         </div>

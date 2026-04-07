@@ -1,13 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRightIcon, MonitorIcon } from "lucide-react";
 import { Badge, Button } from "@salkaro/ui";
 import { PortalMockupTasks } from "@/components/marketing/portal-mockup-tasks";
+import { trackEvent } from "@/lib/analytics";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";
 
 export function DemoSection() {
+  const ref = useSectionTracking("demo");
   return (
-    <section id="demo" className="py-20 sm:py-28 bg-muted/30 border-y border-border overflow-hidden">
+    <section ref={ref} id="demo" className="py-20 sm:py-28 bg-muted/30 border-y border-border overflow-hidden">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Text */}
@@ -24,7 +29,7 @@ export function DemoSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Button size="lg" className="gap-2" asChild>
-                <Link href={`${PORTAL_URL}/demo`}>
+                <Link href={`${PORTAL_URL}/demo`} onClick={() => trackEvent("demo_click", { location: "demo_section" })}>
                   Try the demo
                   <ArrowRightIcon className="size-4" />
                 </Link>

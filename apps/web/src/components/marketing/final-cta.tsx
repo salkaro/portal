@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { Button } from "@salkaro/ui";
+import { trackEvent } from "@/lib/analytics";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";
 
@@ -21,7 +24,7 @@ export function FinalCta() {
             className="w-full sm:w-auto gap-2"
             asChild
           >
-            <Link href={`${PORTAL_URL}/waitlist`}>
+            <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "final_cta" })}>
               Join the waitlist
               <ArrowRightIcon className="size-4" />
             </Link>

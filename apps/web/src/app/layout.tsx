@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 import { cn } from "@/lib/utils";
 import { LandingNav } from "@/components/layout/landing-nav";
 import { LandingFooter } from "@/components/layout/landing-footer";
+import { Analytics } from "@/components/analytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -64,6 +65,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <Analytics />
         <LandingNav />
         {children}
         <LandingFooter />

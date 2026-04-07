@@ -1,9 +1,13 @@
+"use client";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@salkaro/ui";
+import { trackEvent } from "@/lib/analytics";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 const FAQS = [
   {
@@ -44,8 +48,17 @@ const FAQS = [
 ];
 
 export function FaqSection() {
+  const ref = useSectionTracking("faq");
+
+  function handleFaqOpen(value: string) {
+    if (!value) return;
+    const index = parseInt(value.replace("faq-", ""), 10);
+    const question = FAQS[index]?.question;
+    if (question) trackEvent("faq_open", { question });
+  }
+
   return (
-    <section id="faq" className="py-20 sm:py-28">
+    <section ref={ref} id="faq" className="py-20 sm:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <div className="text-center mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -56,7 +69,7 @@ export function FaqSection() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="space-y-1 border-0">
+        <Accordion type="single" collapsible className="space-y-1 border-0" onValueChange={handleFaqOpen}>
           {FAQS.map((faq, i) => (
             <AccordionItem key={i} value={`faq-${i}`} className="rounded-lg border border-border bg-card px-5 overflow-hidden">
               <AccordionTrigger className="text-sm font-medium py-4 hover:no-underline">

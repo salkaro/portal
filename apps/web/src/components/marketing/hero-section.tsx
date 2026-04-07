@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRightIcon, PlayIcon } from "lucide-react";
 import { Button } from "@salkaro/ui";
 import { Badge } from "@salkaro/ui";
 import { PortalMockup } from "@/components/marketing/portal-mockup";
+import { trackEvent } from "@/lib/analytics";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";
 
@@ -42,13 +45,13 @@ export function HeroSection() {
 
         <div className="mt-10 flex flex-col sm:flex-row items-center gap-3">
           <Button size="lg" className="w-full sm:w-auto gap-2" asChild>
-            <Link href={`${PORTAL_URL}/waitlist`}>
+            <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "hero" })}>
               Join the waitlist
               <ArrowRightIcon className="size-4" />
             </Link>
           </Button>
           <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2" asChild>
-            <Link href={`${PORTAL_URL}/demo`}>
+            <Link href={`${PORTAL_URL}/demo`} onClick={() => trackEvent("demo_click", { location: "hero" })}>
               <PlayIcon className="size-4" />
               View demo
             </Link>

@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";
 
@@ -22,10 +25,10 @@ export function LandingFooter() {
 
           {/* Links */}
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <Link href={`${PORTAL_URL}/login`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={`${PORTAL_URL}/login`} onClick={() => trackEvent("signin_click", { location: "footer" })} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Sign in
             </Link>
-            <Link href={`${PORTAL_URL}/waitlist`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "footer" })} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Waitlist
             </Link>
             <Link href={`${PORTAL_URL}/demo`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">

@@ -1,4 +1,7 @@
+"use client";
+
 import { PlugIcon, LayoutDashboardIcon, ShareIcon } from "lucide-react";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 const STEPS = [
   {
@@ -25,8 +28,9 @@ const STEPS = [
 ];
 
 export function HowItWorks() {
+  const ref = useSectionTracking("how_it_works");
   return (
-    <section id="how-it-works" className="py-20 sm:py-28 bg-muted/30 border-y border-border">
+    <section ref={ref} id="how-it-works" className="py-20 sm:py-28 bg-muted/30 border-y border-border">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">

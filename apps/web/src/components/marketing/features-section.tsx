@@ -1,3 +1,5 @@
+"use client";
+
 import {
   RefreshCwIcon,
   UserXIcon,
@@ -9,6 +11,7 @@ import {
   EyeIcon,
   type LucideIcon,
 } from "lucide-react";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 type Feature = {
   icon: LucideIcon;
@@ -68,10 +71,11 @@ const SMALL_FEATURES: Feature[] = [
 ];
 
 export function FeaturesSection() {
+  const ref = useSectionTracking("features");
   const HeroIcon = HERO_FEATURE.icon;
 
   return (
-    <section id="features" className="py-20 sm:py-28">
+    <section ref={ref} id="features" className="py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center mb-14">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">

@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { CheckIcon, XIcon } from "lucide-react";
 import { Button } from "@salkaro/ui";
-import { Badge } from "@salkaro/ui";
+import { trackEvent } from "@/lib/analytics";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";
 
@@ -28,8 +31,9 @@ function Cell({ value }: { value: string | boolean }) {
 }
 
 export function PricingTeaser() {
+  const ref = useSectionTracking("pricing");
   return (
-    <section id="pricing" className="py-20 sm:py-28 bg-muted/30 border-y border-border">
+    <section ref={ref} id="pricing" className="py-20 sm:py-28 bg-muted/30 border-y border-border">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="text-center mb-14">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
@@ -78,12 +82,12 @@ export function PricingTeaser() {
             <div className="p-5" />
             <div className="p-4 border-l border-border flex items-center justify-center">
               <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href={`${PORTAL_URL}/waitlist`}>Join waitlist</Link>
+                <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "pricing" })}>Join waitlist</Link>
               </Button>
             </div>
             <div className="p-4 border-l border-border flex items-center justify-center bg-primary/5">
               <Button size="sm" className="w-full" asChild>
-                <Link href={`${PORTAL_URL}/waitlist`}>Join waitlist</Link>
+                <Link href={`${PORTAL_URL}/waitlist`} onClick={() => trackEvent("waitlist_click", { location: "pricing" })}>Join waitlist</Link>
               </Button>
             </div>
           </div>
