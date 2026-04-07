@@ -1,3 +1,0 @@
-{
-  "installCommand": "npm i -g pnpm@10.29.3 && cd ../.. && pnpm install"
-}

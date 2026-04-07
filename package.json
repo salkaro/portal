@@ -1,18 +1,26 @@
 {
-  "name": "salkaro-portal-monorepo",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "dev:portal": "turbo dev --filter=@salkaro/portal",
-    "dev:web": "turbo dev --filter=@salkaro/web",
-    "build:portal": "turbo build --filter=@salkaro/portal",
-    "build:web": "turbo build --filter=@salkaro/web"
-  },
-  "devDependencies": {
-    "turbo": "^2.5.3"
-  },
-  "packageManager": "pnpm@10.29.3"
+    "name": "salkaro-portal-monorepo",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "turbo dev",
+        "build": "turbo build",
+        "lint": "turbo lint",
+        "dev:portal": "turbo dev --filter=@salkaro/portal",
+        "dev:web": "turbo dev --filter=@salkaro/web",
+        "build:portal": "turbo build --filter=@salkaro/portal",
+        "build:web": "turbo build --filter=@salkaro/web"
+    },
+    "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "prettier": "^3.7.4",
+    "tailwindcss": "^4.1.18",
+    "turbo": "^2.7.4",
+    "typescript": "6.0.2"
+    },
+    "packageManager": "pnpm@10.29.3",
+    "engines": {
+        "node": ">=18"
+    }
 }
