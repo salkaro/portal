@@ -8,7 +8,7 @@ const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro
 
 export function HeroSection() {
   return (
-    <section className="relative pb-0" style={{ overflowX: "clip" }}>
+    <section className="relative pb-0">
       {/* Background grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
