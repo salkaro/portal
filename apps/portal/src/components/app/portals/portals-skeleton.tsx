@@ -2,7 +2,7 @@ import { Skeleton } from "@salkaro/ui";
 
 export function PortalsSkeleton() {
   return (
-    <section className="space-y-4 py-6">
+    <section className="space-y-4 py-6 px-4">
       <div className="flex justify-end">
         <Skeleton className="h-9 w-28" />
       </div>

@@ -21,6 +21,8 @@ export function FeatureGuard({
   fallback = null,
   plan,
 }: FeatureGuardProps) {
+  if (plan === undefined) return <>{fallback}</>;
+
   const userPlan = plan ?? getCurrentUserPlanFromDatabase();
 
   if (freePlanRequired && userPlan !== PLANS.FREE) {
@@ -30,6 +32,7 @@ export function FeatureGuard({
   if (requiredPlan && !hasRequiredPlan(userPlan, requiredPlan)) {
     return <>{fallback}</>;
   }
+
 
   return <>{children}</>;
 }

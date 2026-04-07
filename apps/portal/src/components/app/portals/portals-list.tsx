@@ -1,33 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { MoreHorizontalIcon, PencilIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@salkaro/ui";
-import { Button } from "@salkaro/ui";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@salkaro/ui";
 import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
 import { formatDateTime } from "@/utils/format-dates";
-import { PortalAccessDialog } from "@/components/app/portals/portal-access-dialog";
-import { PortalEditDialog } from "@/components/app/portals/portal-edit-dialog";
-import { PortalDeleteDialog } from "@/components/app/portals/portal-delete-dialog";
 import type { Portal } from "@/types/portal";
 
 type PortalsListProps = {
-  organisationId: string;
   portals: Portal[];
-  onChanged: () => Promise<void>;
 };
 
-export function PortalsList({ organisationId, portals, onChanged }: PortalsListProps) {
-  const [editingPortal, setEditingPortal] = useState<Portal | null>(null);
-  const [pendingDeletePortal, setPendingDeletePortal] = useState<Portal | null>(null);
-  const [accessPortal, setAccessPortal] = useState<Portal | null>(null);
+export function PortalsList({ portals }: PortalsListProps) {
+  const router = useRouter();
 
   const portalColumns: SalkaroColumn<Portal>[] = [
     {
@@ -75,71 +59,18 @@ export function PortalsList({ organisationId, portals, onChanged }: PortalsListP
       label: "Created",
       render: (p) => <span className="text-muted-foreground">{formatDateTime(p.created_at)}</span>,
     },
-    {
-      key: "actions",
-      label: "",
-      className: "w-12 text-right",
-      render: (p) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label="Portal actions">
-              <MoreHorizontalIcon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setAccessPortal(p)}>
-              <ShieldCheckIcon />
-              Access
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setEditingPortal(p)}>
-              <PencilIcon />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setPendingDeletePortal(p)}>
-              <Trash2Icon />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
   ];
 
   return (
-    <>
-      <SalkaroTable
-        rows={portals}
-        columns={portalColumns}
-        rowKey={(p) => p.id}
-        searchable
-        searchPlaceholder="Search portals..."
-        filterBy={["name", "board", "status"]}
-        emptyMessage="No portals found."
-      />
-
-      <PortalEditDialog
-        portal={editingPortal}
-        organisationId={organisationId}
-        onClose={() => setEditingPortal(null)}
-        onSaved={onChanged}
-      />
-
-      <PortalDeleteDialog
-        portal={pendingDeletePortal}
-        organisationId={organisationId}
-        onClose={() => setPendingDeletePortal(null)}
-        onDeleted={onChanged}
-      />
-
-      <PortalAccessDialog
-        key={`${accessPortal?.id ?? "none"}-${accessPortal ? "open" : "closed"}`}
-        open={accessPortal !== null}
-        organisationId={organisationId}
-        portal={accessPortal}
-        onClose={() => setAccessPortal(null)}
-        onUpdated={onChanged}
-      />
-    </>
+    <SalkaroTable
+      rows={portals}
+      columns={portalColumns}
+      rowKey={(p) => p.id}
+      searchable
+      searchPlaceholder="Search portals..."
+      filterBy={["name", "board", "status"]}
+      emptyMessage="No portals found."
+      onRowClick={(p) => router.push(`/portals/${p.id}`)}
+    />
   );
 }

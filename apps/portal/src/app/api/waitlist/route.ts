@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { ServiceError } from '@/services/service-error'
 
-const WAITLIST_LIMIT = 150
-
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
@@ -27,13 +25,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true })
         }
 
-        // Count current entries to determine access_granted
-        const { count } = await service
-            .from('waitlist')
-            .select('*', { count: 'exact', head: true })
-
-        const accessGranted = (count ?? 0) < WAITLIST_LIMIT
-
         const { error } = await service.from('waitlist').insert({
             email: email.toLowerCase().trim(),
             agency_size: agencySize ?? null,
@@ -41,7 +32,7 @@ export async function POST(req: NextRequest) {
             tools_used: tools ?? [],
             update_method: updateMethod ?? null,
             referral_source: referralSource ?? null,
-            access_granted: accessGranted,
+            access_granted: false,
         })
 
         if (error) {

@@ -2,6 +2,7 @@
 
 .claude
 docs
+.turbo
 
 # dependencies
 node_modules

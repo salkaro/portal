@@ -116,9 +116,7 @@ export function PortalsContent() {
         />
       ) : (
         <PortalsList
-          organisationId={organisation?.id ?? ""}
           portals={portals}
-          onChanged={handleRefetchAfterCreate}
         />
       )}
       {organisation && !atLimit ? (

@@ -1,7 +1,6 @@
 "use client";
 
 import { Checkbox } from "@salkaro/ui";
-import { Label } from "@salkaro/ui";
 import { Spinner } from "@salkaro/ui";
 import type { MondayBoardColumn } from "@/services/monday";
 
@@ -24,7 +23,6 @@ export function PortalEditFieldsTab({
 }: PortalEditFieldsTabProps) {
   return (
     <div className="space-y-2">
-      <Label>Fields to display</Label>
       <p className="text-xs text-muted-foreground">Board: {boardName}</p>
       {loadingColumns ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
