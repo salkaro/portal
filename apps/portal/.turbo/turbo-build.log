@@ -1,0 +1,55 @@
+[6n[?9001h[?1004h[m]0;C:\WINDOWS\system32\cmd.exe[?25h[?25l
+> @salkaro/portal@0.1.0 build C:\Users\nick\Work\company\salkaro\products\portal\apps\portal
+> next build[5;1H[?25h[38;2;173;127;168m[1m▲ Next.js 16.2.1[m (Turbopack)
+[?25l- Environments: .env.local[8;1H[?25h[37m[1m [m Creating an optimized production build ...
+[32m[1m✓[m Compiled successfully in 10.4s
+[37m[1m [m Running TypeScript  [36m.[?25l[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[37m[1m [m Running TypeScript  [36m...[m[K[105C[37m[1m [m Running TypeScript  [36m.[m[K[105C[37m[1m [m Running TypeScript  [36m..[m[K[105C[32m[1m✓[m Finished TypeScript in 9.6s[K[37m[1m
+ [m Collecting page data using 15 workers  [36m.[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m..[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m...[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m.[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m..[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m...[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m.[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m..[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m...[m[K[105C[37m[1m [m Collecting page data using 15 workers  [36m.[m[K[105C[32m[1m✓[m Collecting page data using 15 workers in 1896ms    
+[?25h[?25l[37m[1m [m Generating static pages using 15 workers (0/37)  [36m[    ][m[K[105C[37m[1m [m Generating static pages using 15 workers (13/37)  [36m[=   ][m[K[105C[37m[1m [m Generating static pages using 15 workers (27/37)  [36m[==  ][m[K[105C[32m[1m✓[m Generating static pages using 15 workers (37/37) in 630ms
+[?25h[37m[1m [m Finalizing page optimization  [36m.[?25l[m[32m[1m✓[m Finalizing page optimization in 14ms[K[4m[15;1HRoute (app)[24m
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /activity
+├ ƒ /api/account/delete
+├ ƒ /api/activity
+├ ƒ /api/activity/event
+├ ƒ /api/auth/[provider]
+├ ƒ /api/auth/[provider]/callback
+├ ƒ /api/auth/callback
+├ ƒ /api/portals/monday-source
+├ ƒ /api/portals/portal-source
+├ ƒ /api/portals/public
+├ ƒ /api/portals/public/board-data
+├ ƒ /api/portals/public/export-pdf
+├ ƒ /api/portals/public/find-by-code
+├ ƒ /api/portals/public/find-by-email[?25h
+├ ƒ /api/portals/public/request-otp
+├ ƒ /api/portals/public/verify-code
+├ ƒ /api/portals/public/verify-otp
+├ ƒ /api/stripe/webhook
+├ ƒ /api/waitlist
+├ ƒ /api/waitlist/check
+├ ƒ /clients
+├ ƒ /dashboard
+├ ○ /demo
+├ ƒ /employees
+├ ○ /get-started
+├ ƒ /integrations
+├ ƒ /integrations/browse
+├ ○ /login
+├ ƒ /portals
+├ ƒ /reset
+├ ƒ /settings
+├ ƒ /settings/appearance
+├ ƒ /settings/billing
+├ ƒ /settings/organisation
+├ ƒ /view
+└ ○ /waitlist
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+[?9001l[?1004l
