@@ -169,7 +169,7 @@ export function PortalBoardView({
             <PortalOverviewSection items={data.items} showStatus={showStatus} />
           )}
           {activeSection === "tasks" && (
-            <PortalTasksSection columns={data.columns} items={data.items} />
+            <PortalTasksSection columns={data.columns} items={data.items} primaryColor={customization?.primaryColor ?? "#0d9488"} />
           )}
           {activeSection === "timeline" && showTimeline && (
             <PortalTimelineSection items={data.items} />

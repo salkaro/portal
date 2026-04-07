@@ -58,7 +58,7 @@ export function DemoBoardView() {
           activeSectionLabel={activeSectionLabel}
           refreshing={false}
           exporting={exporting}
-          canExport={false}
+          canExport={true}
           onRefresh={() => {}}
           onExport={() => void handleExport()}
         />
@@ -80,7 +80,7 @@ export function DemoBoardView() {
             />
           )}
           {activeSection === "tasks" && (
-            <PortalTasksSection columns={data.columns} items={data.items} />
+            <PortalTasksSection columns={data.columns} items={data.items} primaryColor="#0d9488" />
           )}
           {activeSection === "timeline" && DEMO_CUSTOMIZATION.showTimelineSection && (
             <PortalTimelineSection items={data.items} />

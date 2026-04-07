@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  SalkaroTable,
+  type SalkaroColumn,
+} from "@/components/ui/salkaro-table";
 import type { PortalColumn, PortalItem } from "@/types/portal-view";
 import { getCompletionStats } from "@/utils/portal-view";
 import { PortalItemDrawer } from "@/components/app/portals/view/shared/portal-item-drawer";
@@ -10,6 +15,7 @@ import { PortalItemDrawer } from "@/components/app/portals/view/shared/portal-it
 type PortalItemsTableProps = {
   columns: PortalColumn[];
   items: PortalItem[];
+  primaryColor?: string;
 };
 
 const STATUS_DONE = ["done", "complete", "completed", "closed", "finished"];
@@ -23,7 +29,11 @@ function formatDate(text: string): string {
   const dateStr = text.includes(" - ") ? text.split(" - ")[1] : text;
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return text;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function StatusBadge({ label }: { label: string }) {
@@ -34,10 +44,10 @@ function StatusBadge({ label }: { label: string }) {
     lower === "done" || lower === "complete" || lower === "completed"
       ? "border-green-500/40 bg-green-500/10 text-green-600"
       : lower === "in progress" || lower === "working on it"
-      ? "border-blue-500/40 bg-blue-500/10 text-blue-600"
-      : lower === "stuck" || lower === "blocked"
-      ? "border-destructive/40 bg-destructive/10 text-destructive"
-      : "border-border bg-muted/50 text-muted-foreground";
+        ? "border-blue-500/40 bg-blue-500/10 text-blue-600"
+        : lower === "stuck" || lower === "blocked"
+          ? "border-destructive/40 bg-destructive/10 text-destructive"
+          : "border-border bg-muted/50 text-muted-foreground";
 
   return (
     <Badge variant="outline" className={`text-[0.625rem] ${colorClass}`}>
@@ -47,7 +57,7 @@ function StatusBadge({ label }: { label: string }) {
 }
 
 function SubitemProgress({ item }: { item: PortalItem }) {
-  const subitems = item.subitems;
+  const { subitems } = item;
   if (subitems.length === 0) return null;
 
   const done = subitems.filter((s) => isSubitemDone(s.status)).length;
@@ -73,13 +83,20 @@ type GroupTableProps = {
   items: PortalItem[];
   columns: PortalColumn[];
   onSelectItem: (item: PortalItem) => void;
+  showTitle?: boolean;
 };
 
-function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProps) {
-  const { donePercent } = getCompletionStats(items);
-
+function GroupTable({
+  groupTitle,
+  items,
+  columns,
+  onSelectItem,
+  showTitle = true,
+}: GroupTableProps) {
   const statusCol = columns.find((c) => c.type === "status");
-  const dateCol = columns.find((c) => c.type === "date" || c.type === "timeline");
+  const dateCol = columns.find(
+    (c) => c.type === "date" || c.type === "timeline",
+  );
   const ownerCol = columns.find((c) => c.type === "people");
   const labelsCol = columns.find((c) => c.type === "labels");
 
@@ -90,7 +107,9 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
       className: "min-w-[200px]",
       render: (item) => (
         <div className="font-medium text-xs">
-          <span className="block max-w-sm truncate" title={item.name}>{item.name}</span>
+          <span className="block max-w-sm truncate" title={item.name}>
+            {item.name}
+          </span>
           <SubitemProgress item={item} />
         </div>
       ),
@@ -103,11 +122,15 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
             label: "Status",
             className: "w-36",
             render: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === statusCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === statusCol.id,
+              );
               return <StatusBadge label={cv?.text ?? ""} />;
             },
             searchValue: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === statusCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === statusCol.id,
+              );
               return cv?.text ?? "";
             },
           },
@@ -120,7 +143,9 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
             label: "Due",
             className: "w-36",
             render: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === dateCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === dateCol.id,
+              );
               return (
                 <span className="text-xs text-muted-foreground">
                   {cv?.text ? formatDate(cv.text) : "—"}
@@ -128,7 +153,9 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
               );
             },
             searchValue: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === dateCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === dateCol.id,
+              );
               return cv?.text ?? "";
             },
           },
@@ -141,13 +168,23 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
             label: "Owner",
             className: "w-40",
             render: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === ownerCol.id);
-              if (!cv?.text) return <span className="text-xs text-muted-foreground">—</span>;
-              const names = cv.text.split(",").map((n) => n.trim()).filter(Boolean);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === ownerCol.id,
+              );
+              if (!cv?.text)
+                return <span className="text-xs text-muted-foreground">—</span>;
+              const names = cv.text
+                .split(",")
+                .map((n) => n.trim())
+                .filter(Boolean);
               return (
                 <div className="flex flex-wrap gap-1">
                   {names.map((name) => (
-                    <Badge key={name} variant="outline" className="text-[0.625rem]">
+                    <Badge
+                      key={name}
+                      variant="outline"
+                      className="text-[0.625rem]"
+                    >
                       {name}
                     </Badge>
                   ))}
@@ -155,7 +192,9 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
               );
             },
             searchValue: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === ownerCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === ownerCol.id,
+              );
               return cv?.text ?? "";
             },
           },
@@ -168,13 +207,23 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
             label: "Labels",
             className: "w-40",
             render: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === labelsCol.id);
-              if (!cv?.text) return <span className="text-xs text-muted-foreground">—</span>;
-              const labels = cv.text.split(",").map((l) => l.trim()).filter(Boolean);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === labelsCol.id,
+              );
+              if (!cv?.text)
+                return <span className="text-xs text-muted-foreground">—</span>;
+              const labels = cv.text
+                .split(",")
+                .map((l) => l.trim())
+                .filter(Boolean);
               return (
                 <div className="flex flex-wrap gap-1">
                   {labels.map((label) => (
-                    <Badge key={label} variant="outline" className="text-[0.625rem]">
+                    <Badge
+                      key={label}
+                      variant="outline"
+                      className="text-[0.625rem]"
+                    >
                       {label}
                     </Badge>
                   ))}
@@ -182,7 +231,9 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
               );
             },
             searchValue: (item: PortalItem) => {
-              const cv = item.columnValues.find((v) => v.columnId === labelsCol.id);
+              const cv = item.columnValues.find(
+                (v) => v.columnId === labelsCol.id,
+              );
               return cv?.text ?? "";
             },
           },
@@ -195,30 +246,33 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
       rows={items}
       columns={tableColumns}
       rowKey={(item) => item.id}
-      title={groupTitle}
+      title={showTitle ? groupTitle : undefined}
       collapsable
-      headerRight={
-        <span className="text-xs text-muted-foreground">
-          {items.length} task{items.length !== 1 ? "s" : ""} · {donePercent}% complete
-        </span>
-      }
       searchable
       searchPlaceholder="Search tasks..."
       pageSize={10}
       onRowClick={(item) => {
-        const hasText = item.columnValues.some((cv) => (cv.type === "text" || cv.type === "long_text") && cv.text?.trim());
+        const hasText = item.columnValues.some(
+          (cv) =>
+            (cv.type === "text" || cv.type === "long_text") && cv.text?.trim(),
+        );
         if (item.subitems.length > 0 || hasText) onSelectItem(item);
       }}
       rowClassName={(item) => {
-        const hasText = item.columnValues.some((cv) => (cv.type === "text" || cv.type === "long_text") && cv.text?.trim());
-        return item.subitems.length === 0 && !hasText ? "cursor-default" : undefined;
+        const hasText = item.columnValues.some(
+          (cv) =>
+            (cv.type === "text" || cv.type === "long_text") && cv.text?.trim(),
+        );
+        return item.subitems.length === 0 && !hasText
+          ? "cursor-default"
+          : undefined;
       }}
       emptyMessage="No tasks in this group."
     />
   );
 }
 
-export function PortalItemsTable({ columns, items }: PortalItemsTableProps) {
+export function PortalItemsTable({ columns, items, primaryColor = "#0d9488" }: PortalItemsTableProps) {
   const [selectedItem, setSelectedItem] = useState<PortalItem | null>(null);
 
   const groupOrder: string[] = [];
@@ -231,22 +285,75 @@ export function PortalItemsTable({ columns, items }: PortalItemsTableProps) {
     groupMap.get(item.groupId)!.items.push(item);
   }
 
+  const firstGroupId = groupOrder[0] ?? "";
+  const [activeGroupId, setActiveGroupId] = useState(firstGroupId);
+  const activeGroup = groupMap.get(activeGroupId);
+  const { total } = activeGroup
+    ? getCompletionStats(activeGroup.items)
+    : { total: 0 };
+
   return (
     <>
-      <div className="space-y-4">
-        {groupOrder.map((groupId) => {
-          const group = groupMap.get(groupId)!;
-          return (
-            <GroupTable
-              key={groupId}
-              groupTitle={group.title}
-              items={group.items}
-              columns={columns}
-              onSelectItem={setSelectedItem}
-            />
-          );
-        })}
-      </div>
+      {groupOrder.length <= 1 ? (
+        <div>
+          {groupOrder.map((groupId) => {
+            const group = groupMap.get(groupId)!;
+            return (
+              <GroupTable
+                key={groupId}
+                groupTitle={group.title}
+                items={group.items}
+                columns={columns}
+                onSelectItem={setSelectedItem}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <Tabs value={activeGroupId} onValueChange={setActiveGroupId}>
+          <div className="flex items-center justify-between gap-4">
+            <TabsList>
+              {groupOrder.map((groupId) => {
+                const group = groupMap.get(groupId)!;
+                return (
+                  <TabsTrigger key={groupId} value={groupId}>
+                    {group.title}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+              <div
+                className="flex size-8 items-center justify-center rounded-lg"
+                style={{ background: `color-mix(in srgb, ${primaryColor} 15%, transparent)` }}
+              >
+                <ListTodo
+                  className="size-4"
+                  style={{ color: primaryColor }}
+                />
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Total tasks</p>
+                <p className="text-sm font-semibold tabular-nums">{total}</p>
+              </div>
+            </div>
+          </div>
+          {groupOrder.map((groupId) => {
+            const group = groupMap.get(groupId)!;
+            return (
+              <TabsContent key={groupId} value={groupId} className="mt-2">
+                <GroupTable
+                  groupTitle={group.title}
+                  items={group.items}
+                  columns={columns}
+                  onSelectItem={setSelectedItem}
+                  showTitle={false}
+                />
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      )}
 
       <PortalItemDrawer
         item={selectedItem}

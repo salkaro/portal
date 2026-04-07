@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Circle, Settings } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PortalItem } from "@/types/portal-view";
 import { getOverdueItems, getUpcomingItems } from "@/utils/portal-view";
 
@@ -42,9 +41,10 @@ function getItemDateText(item: PortalItem): string {
 type MilestoneRowProps = {
   item: PortalItem;
   isOverdue: boolean;
+  isLast: boolean;
 };
 
-function MilestoneRow({ item, isOverdue }: MilestoneRowProps) {
+function MilestoneRow({ item, isOverdue, isLast }: MilestoneRowProps) {
   const state = isOverdue ? "delayed" : getMilestoneState(item);
   const dateText = getItemDateText(item);
 
@@ -70,17 +70,24 @@ function MilestoneRow({ item, isOverdue }: MilestoneRowProps) {
   }[state];
 
   return (
-    <div className="flex items-start gap-3 py-2.5">
-      <iconProps.Icon className={`mt-0.5 size-4 shrink-0 ${iconProps.className}`} />
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${state === "done" ? "text-muted-foreground line-through" : "text-foreground"}`}>
-          {item.name}
-        </p>
+    <div className="flex gap-4">
+      {/* Track */}
+      <div className="flex flex-col items-center">
+        <iconProps.Icon className={`size-4 shrink-0 ${iconProps.className}`} />
+        {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
+      </div>
+      {/* Content */}
+      <div className={`flex-1 min-w-0 ${!isLast ? "pb-5" : ""}`}>
+        <div className="flex items-start justify-between gap-4">
+          <p className={`text-sm font-medium ${state === "done" ? "text-muted-foreground line-through" : "text-foreground"}`}>
+            {item.name}
+          </p>
+          <span className={`shrink-0 text-xs font-medium ${labelColor}`}>{stateLabel}</span>
+        </div>
         {dateText && (
           <p className="mt-0.5 text-xs text-muted-foreground">Due {dateText}</p>
         )}
       </div>
-      <span className={`shrink-0 text-xs font-medium ${labelColor}`}>{stateLabel}</span>
     </div>
   );
 }
@@ -97,29 +104,20 @@ export function PortalTimelineContent({ items }: PortalTimelineContentProps) {
 
   if (milestones.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Milestones</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">No upcoming milestones.</p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground">No upcoming milestones.</p>
     );
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">Milestones</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <div className="divide-y divide-border">
-          {milestones.map((item) => (
-            <MilestoneRow key={item.id} item={item} isOverdue={overdueIds.has(item.id)} />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="max-w-2xl">
+      {milestones.map((item, i) => (
+        <MilestoneRow
+          key={item.id}
+          item={item}
+          isOverdue={overdueIds.has(item.id)}
+          isLast={i === milestones.length - 1}
+        />
+      ))}
+    </div>
   );
 }
