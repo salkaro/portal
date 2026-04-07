@@ -159,7 +159,7 @@ export function PortalBoardView({
           activeSectionLabel={activeSectionLabel}
           refreshing={refreshing}
           exporting={exporting}
-          canExport={isPro}
+          canExport={true}
           onRefresh={() => void load(true)}
           onExport={() => void handleExport()}
         />
