@@ -56,6 +56,7 @@ type UpdatePortalAccessResult = {
 type CreatePortalInput = {
     organisationId: string
     connectionId: string
+    provider: string
     name: string
     importConfig: PortalImportConfig
     customization?: Partial<PortalCustomization>
@@ -103,7 +104,12 @@ function isSameCustomization(current: PortalCustomization, next: PortalCustomiza
         (current.organisationName ?? null) === (next.organisationName ?? null) &&
         current.showStatusSection === next.showStatusSection &&
         current.showTimelineSection === next.showTimelineSection &&
-        current.showOwnersSection === next.showOwnersSection
+        current.showOwnersSection === next.showOwnersSection &&
+        (current.logoUrl ?? null) === (next.logoUrl ?? null) &&
+        (current.primaryColor ?? null) === (next.primaryColor ?? null) &&
+        (current.foregroundColor ?? null) === (next.foregroundColor ?? null) &&
+        (current.hidePoweredBy ?? false) === (next.hidePoweredBy ?? false) &&
+        (current.hidePdfBranding ?? false) === (next.hidePdfBranding ?? false)
     )
 }
 
@@ -131,7 +137,7 @@ export async function createPortal(input: CreatePortalInput): Promise<CreatePort
             organisation_id: input.organisationId,
             name: input.name.trim(),
             slug: withRandomSuffix(input.name, 'portal'),
-            provider: 'monday',
+            provider: input.provider,
             connection_id: input.connectionId,
             status: 'draft',
             access_type: 'anyone_with_link',

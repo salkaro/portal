@@ -198,22 +198,35 @@ export function IntegrationsContent() {
           Failed to load connected integrations: {error.message}
         </p>
       ) : connectedIntegrations.length === 0 ? (
-        <div className="flex min-h-52 flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center">
-          <div className="mb-2 flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <LinkIcon className="size-4" />
-          </div>
-          <p className="text-sm font-medium text-foreground">
-            There are no connections.
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Browse the integration library to connect your first workspace.
-          </p>
-          <div className="mt-4">
-            <Button asChild size="sm">
-              <Link href="/integrations/browse">Browse integrations</Link>
+        <>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label="Refresh integrations"
+              disabled={refreshDisabled}
+              onClick={() => void refresh()}
+            >
+              <RefreshCcwIcon className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
             </Button>
           </div>
-        </div>
+          <div className="flex min-h-52 flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center">
+            <div className="mb-2 flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <LinkIcon className="size-4" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              There are no connections.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Browse the integration library to connect your first workspace.
+            </p>
+            <div className="mt-4">
+              <Button asChild size="sm">
+                <Link href="/integrations/browse">Browse integrations</Link>
+              </Button>
+            </div>
+          </div>
+        </>
       ) : (
         <SalkaroTable
           rows={

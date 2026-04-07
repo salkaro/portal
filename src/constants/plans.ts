@@ -7,7 +7,7 @@ export const PLANS = {
 export const FREE_PLAN_LIMITS = {
     PORTALS: 2,
     EMPLOYEES: 3,
-    INTEGRATIONS: 1,
+    INTEGRATIONS: 2,
     INVITES: 3,
     ACTIVITY_EVENTS: 0,
 }

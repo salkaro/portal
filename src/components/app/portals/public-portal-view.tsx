@@ -637,13 +637,13 @@ export function PublicPortalView({
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl p-6">
+    <div className="flex h-screen w-full overflow-hidden">
       <PortalBoardView
         portalId={portal.id}
         portalName={portal.name}
         customization={portal.customization ?? null}
       />
-    </main>
+    </div>
   );
 }
 

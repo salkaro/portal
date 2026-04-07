@@ -371,7 +371,6 @@ export function ActivityContent() {
         searchPlaceholder="Search activity..."
         filterBy={["event", "actor", "portal"]}
         emptyMessage="No activity yet."
-        pageSize={20}
       />
     </section>
   );

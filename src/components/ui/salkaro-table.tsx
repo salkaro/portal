@@ -54,7 +54,7 @@ export function SalkaroTable<TRow>({
   searchPlaceholder = "Search...",
   filterBy,
   emptyMessage = "No results found.",
-  pageSize,
+  pageSize = 10,
   onRowClick,
   rowClassName,
   collapsable = false,

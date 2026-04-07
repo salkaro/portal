@@ -36,9 +36,9 @@ export function DemoGate() {
 
   if (unlocked) {
     return (
-      <main className="mx-auto min-h-screen w-full max-w-5xl p-6">
+      <div className="flex h-screen w-full overflow-hidden">
         <DemoBoardView />
-      </main>
+      </div>
     );
   }
 

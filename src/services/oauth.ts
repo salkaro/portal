@@ -223,17 +223,42 @@ export async function upsertConnectedAccount(input: {
             ? new Date(Date.now() + input.expiresInSeconds * 1000).toISOString()
             : null
 
-    const { error } = await supabase.from('connected_accounts').insert({
+    // The unique index on (organisation_id, provider, external_account_id) is a partial index
+    // (WHERE external_account_id IS NOT NULL), which Supabase upsert cannot target directly.
+    // Instead, find an existing row and update it, or insert if none exists.
+    const externalAccountId = input.externalAccountId ?? null
+
+    let query = supabase
+        .from('connected_accounts')
+        .select('id')
+        .eq('organisation_id', input.organisationId)
+        .eq('provider', input.provider)
+
+    if (externalAccountId !== null) {
+        query = query.eq('external_account_id', externalAccountId)
+    }
+
+    const { data: existing, error: selectError } = await query.maybeSingle<{ id: string }>()
+
+    if (selectError) {
+        throw new ServiceError(selectError.message, 'database_error', 500)
+    }
+
+    const payload = {
         organisation_id: input.organisationId,
         created_by: input.actorUserId,
         provider: input.provider,
-        external_account_id: input.externalAccountId ?? null,
+        external_account_id: externalAccountId,
         access_token_encrypted: encryptText(input.accessToken),
         refresh_token_encrypted: input.refreshToken ? encryptText(input.refreshToken) : null,
         token_expires_at: tokenExpiresAt,
         scopes: input.scope ? input.scope.split(' ').filter(Boolean) : null,
         metadata: input.metadata ?? {},
-    })
+    }
+
+    const { error } = existing
+        ? await supabase.from('connected_accounts').update(payload).eq('id', existing.id)
+        : await supabase.from('connected_accounts').insert(payload)
 
     if (error) {
         throw new ServiceError(error.message, 'database_error', 500)

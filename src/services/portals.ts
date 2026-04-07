@@ -9,6 +9,17 @@ type PortalSummary = {
     access_type: PortalAccessType
 }
 
+type PortalSourceBoard = { id: string; name: string }
+type PortalSourceSubBoard = { id: string; name: string }
+type PortalSourceColumn = { id: string; title: string; type: string }
+
+type PortalSourceResponse = {
+    boards: PortalSourceBoard[]
+    subBoards: PortalSourceSubBoard[]
+    columns: PortalSourceColumn[]
+}
+
+// Legacy alias kept for backwards compatibility with monday-specific callers
 type MondaySourceResponse = {
     boards: MondayBoard[]
     columns: MondayBoardColumn[]
@@ -78,11 +89,12 @@ export async function findPortalByCode(code: string): Promise<{ portal: PortalSu
     return (await response.json()) as { portal: PortalSummary }
 }
 
-export async function fetchMondaySource(input: {
+export async function fetchPortalSource(input: {
     connectionId: string
     boardId?: string
-}): Promise<MondaySourceResponse> {
-    const response = await fetch('/api/portals/monday-source', {
+    subBoardId?: string
+}): Promise<PortalSourceResponse> {
+    const response = await fetch('/api/portals/portal-source', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -93,13 +105,21 @@ export async function fetchMondaySource(input: {
     if (!response.ok) {
         const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null
         throw new ServiceError(
-            errorPayload?.message ?? 'Unable to load monday source data',
+            errorPayload?.message ?? 'Unable to load portal source data',
             'upstream_error',
             response.status
         )
     }
 
-    return (await response.json()) as MondaySourceResponse
+    return (await response.json()) as PortalSourceResponse
+}
+
+/** @deprecated Use fetchPortalSource instead */
+export async function fetchMondaySource(input: {
+    connectionId: string
+    boardId?: string
+}): Promise<MondaySourceResponse> {
+    return fetchPortalSource(input) as Promise<MondaySourceResponse>
 }
 
 export async function fetchPublicPortal(portalId: string): Promise<PublicPortalResponse> {

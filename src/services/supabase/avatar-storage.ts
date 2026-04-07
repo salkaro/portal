@@ -43,6 +43,34 @@ export async function uploadAvatarDataUrl(
     return { publicUrl: data.publicUrl }
 }
 
+export async function uploadPortalLogoDataUrl(
+    organisationId: string,
+    portalId: string,
+    dataUrl: string
+): Promise<{ publicUrl: string }> {
+    const supabase = createClient()
+    const filePath = `${organisationId}/portal-${portalId}.jpg`
+    const blob = dataUrlToBlob(dataUrl)
+
+    const { error: uploadError } = await supabase.storage
+        .from(ORGANISATION_BRANDING_BUCKET)
+        .upload(filePath, blob, {
+            upsert: true,
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+        })
+
+    if (uploadError) {
+        throw new Error(uploadError.message)
+    }
+
+    const { data } = supabase.storage
+        .from(ORGANISATION_BRANDING_BUCKET)
+        .getPublicUrl(filePath)
+
+    return { publicUrl: `${data.publicUrl}?t=${Date.now()}` }
+}
+
 export async function uploadOrganisationIconDataUrl(
     organisationId: string,
     iconDataUrl: string

@@ -90,7 +90,6 @@ function deriveEvents(items: PortalItem[]): ActivityEvent[] {
     }
   }
 
-  // Sort: completed first (by date desc), then in-progress, then rest
   const typeOrder: Record<ActivityEvent["type"], number> = {
     completed: 0,
     in_progress: 1,
@@ -118,7 +117,6 @@ export function PortalActivityFeed({ items }: PortalActivityFeedProps) {
 
   if (events.length === 0) return null;
 
-  // Group by dateText for the feed layout
   const grouped: { date: string; events: ActivityEvent[] }[] = [];
   for (const event of events) {
     const last = grouped[grouped.length - 1];

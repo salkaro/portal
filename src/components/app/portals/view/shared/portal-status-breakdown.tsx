@@ -20,7 +20,6 @@ export function PortalStatusBreakdown({ items }: PortalStatusBreakdownProps) {
         <CardTitle className="text-sm font-semibold">Status Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Stacked bar */}
         <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
           {statusCounts.map((s) => (
             <div
@@ -32,7 +31,6 @@ export function PortalStatusBreakdown({ items }: PortalStatusBreakdownProps) {
           ))}
         </div>
 
-        {/* Row breakdown */}
         <div className="space-y-2 pt-1">
           {statusCounts.map((s) => {
             const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;

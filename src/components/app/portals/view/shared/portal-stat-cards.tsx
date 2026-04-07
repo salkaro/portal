@@ -15,7 +15,6 @@ export function PortalStatCards({ items }: PortalStatCardsProps) {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {/* Tasks */}
       <Card className="shadow-sm">
         <CardContent className="space-y-2 p-4">
           <div className="flex items-center justify-between">
@@ -27,7 +26,6 @@ export function PortalStatCards({ items }: PortalStatCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Completion */}
       <Card className="shadow-sm">
         <CardContent className="space-y-2 p-4">
           <div className="flex items-center justify-between">
@@ -47,7 +45,6 @@ export function PortalStatCards({ items }: PortalStatCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Active */}
       <Card className="shadow-sm">
         <CardContent className="space-y-2 p-4">
           <div className="flex items-center justify-between">
@@ -59,7 +56,6 @@ export function PortalStatCards({ items }: PortalStatCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Needs Attention */}
       <Card className={`shadow-sm ${overdue > 0 ? "border-destructive/30" : ""}`}>
         <CardContent className="space-y-2 p-4">
           <div className="flex items-center justify-between">

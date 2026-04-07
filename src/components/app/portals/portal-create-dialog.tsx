@@ -39,7 +39,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useMondaySource } from "@/hooks/use-monday-source";
+import { usePortalSource } from "@/hooks/use-portal-source";
 import { createPortal } from "@/services/supabase/portals";
 import type { ConnectedAccount } from "@/services/supabase/connections";
 import { getConnectionDisplayName } from "@/utils/connections";
@@ -48,7 +48,7 @@ type PortalCreateDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organisationId: string;
-  mondayConnections: ConnectedAccount[];
+  connections: ConnectedAccount[];
   onCreated: () => Promise<void>;
 };
 
@@ -56,13 +56,14 @@ export function PortalCreateDialog({
   open,
   onOpenChange,
   organisationId,
-  mondayConnections,
+  connections,
   onCreated,
 }: PortalCreateDialogProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [portalName, setPortalName] = useState(PORTAL_DEFAULT_NAME);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>("");
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
+  const [selectedSubBoardId, setSelectedSubBoardId] = useState<string>("");
   const [selectedColumnIds, setSelectedColumnIds] = useState<string[]>([]);
   const [tagline, setTagline] = useState("");
   const [projectOwner, setProjectOwner] = useState("");
@@ -75,51 +76,68 @@ export function PortalCreateDialog({
 
   const {
     boards,
+    subBoards,
     columns,
     loadingBoards,
+    loadingSubBoards,
     loadingColumns,
     errorMessage,
     loadBoards,
+    loadSubBoards,
     loadColumns,
-  } = useMondaySource();
+  } = usePortalSource();
 
   const progressValue =
     ((currentStepIndex + 1) / PORTAL_CREATION_STEPS.length) * 100;
   const isLastStep = currentStepIndex === PORTAL_CREATION_STEPS.length - 1;
 
-  const selectedBoardName = useMemo(() => {
-    return (
-      boards.find((board) => board.id === selectedBoardId)?.name ??
-      "Unknown board"
-    );
-  }, [boards, selectedBoardId]);
+  const selectedConnection = useMemo(
+    () => connections.find((c) => c.id === selectedConnectionId) ?? null,
+    [connections, selectedConnectionId]
+  );
+
+  const selectedBoardName = useMemo(
+    () => boards.find((b) => b.id === selectedBoardId)?.name ?? "Unknown board",
+    [boards, selectedBoardId]
+  );
+
+  const selectedSubBoardName = useMemo(
+    () => subBoards.find((b) => b.id === selectedSubBoardId)?.name ?? null,
+    [subBoards, selectedSubBoardId]
+  );
+
+  const isLinear = selectedConnection?.provider === "linear";
 
   const importableColumns = useMemo(() => {
-    return columns.filter((column) =>
-      isMondayImportableColumnType(column.type),
-    );
-  }, [columns]);
+    // Monday has typed columns — only import relevant types.
+    // All other providers (Linear etc.) expose only relevant columns already.
+    if (selectedConnection?.provider === "monday") {
+      return columns.filter((column) =>
+        isMondayImportableColumnType(column.type)
+      );
+    }
+    return columns;
+  }, [columns, selectedConnection]);
 
   const canContinue = useMemo(() => {
     const step = PORTAL_CREATION_STEPS[currentStepIndex];
 
-    if (step === "connection") {
-      return selectedConnectionId.length > 0;
-    }
-
+    if (step === "connection") return selectedConnectionId.length > 0;
     if (step === "source") {
-      return selectedBoardId.length > 0;
+      if (!selectedBoardId) return false;
+      // For Linear, project selection is required only when projects exist
+      if (isLinear && subBoards.length > 0 && !selectedSubBoardId) return false;
+      return true;
     }
-
-    if (step === "import") {
-      return selectedColumnIds.length > 0;
-    }
-
+    if (step === "import") return selectedColumnIds.length > 0;
     return portalName.trim().length > 0;
   }, [
     currentStepIndex,
+    isLinear,
     portalName,
     selectedBoardId,
+    selectedSubBoardId,
+    subBoards.length,
     selectedColumnIds.length,
     selectedConnectionId,
   ]);
@@ -129,6 +147,7 @@ export function PortalCreateDialog({
     setPortalName(PORTAL_DEFAULT_NAME);
     setSelectedConnectionId("");
     setSelectedBoardId("");
+    setSelectedSubBoardId("");
     setSelectedColumnIds([]);
     setTagline("");
     setProjectOwner("");
@@ -143,19 +162,28 @@ export function PortalCreateDialog({
   async function handleSelectConnection(connectionId: string) {
     setSelectedConnectionId(connectionId);
     setSelectedBoardId("");
+    setSelectedSubBoardId("");
     setSelectedColumnIds([]);
     await loadBoards(connectionId);
   }
 
   async function handleSelectBoard(boardId: string) {
     setSelectedBoardId(boardId);
+    setSelectedSubBoardId("");
     setSelectedColumnIds([]);
-
-    if (!selectedConnectionId) {
-      return;
+    if (!selectedConnectionId) return;
+    if (isLinear) {
+      await loadSubBoards(selectedConnectionId, boardId);
+    } else {
+      await loadColumns(selectedConnectionId, boardId, "");
     }
+  }
 
-    await loadColumns(selectedConnectionId, boardId);
+  async function handleSelectSubBoard(subBoardId: string) {
+    setSelectedSubBoardId(subBoardId);
+    setSelectedColumnIds([]);
+    if (!selectedConnectionId || !selectedBoardId) return;
+    await loadColumns(selectedConnectionId, selectedBoardId, subBoardId, true);
   }
 
   async function handleSubmit() {
@@ -173,11 +201,14 @@ export function PortalCreateDialog({
     const result = await createPortal({
       organisationId,
       connectionId: selectedConnectionId,
+      provider: selectedConnection?.provider ?? "monday",
       name: portalName.trim(),
       importConfig: {
         boardId: selectedBoardId,
         boardName: selectedBoardName,
         selectedColumnIds,
+        subBoardId: selectedSubBoardId || null,
+        subBoardName: selectedSubBoardName,
       },
       customization: {
         tagline: tagline.trim() || null,
@@ -201,14 +232,16 @@ export function PortalCreateDialog({
     handleClose();
   }
 
+  const boardLabel =
+    selectedConnection?.provider === "linear" ? "team" : "board";
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
-      <DialogContent className="sm:max-w-xl" showCloseButton={false}>
+      <DialogContent className="sm:max-w-xl flex flex-col max-h-[90vh]" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Create portal</DialogTitle>
           <DialogDescription>
-            Choose a monday connection, select source fields, then customize
-            your portal.
+            Choose a connection, select a source, then customize your portal.
           </DialogDescription>
         </DialogHeader>
 
@@ -224,16 +257,17 @@ export function PortalCreateDialog({
           </p>
         </div>
 
+        <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
         {PORTAL_CREATION_STEPS[currentStepIndex] === "connection" ? (
           <div className="space-y-2">
-            <Label>Monday connection</Label>
-            {mondayConnections.length === 0 ? (
+            <Label>Connection</Label>
+            {connections.length === 0 ? (
               <div className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
-                <p>No monday connections found.</p>
+                <p>No connections found.</p>
                 <Button variant="outline" size="sm" className="mt-2" asChild>
                   <Link href="/integrations/browse">
                     <LinkIcon className="size-4" />
-                    Connect monday
+                    Connect an integration
                   </Link>
                 </Button>
               </div>
@@ -243,10 +277,10 @@ export function PortalCreateDialog({
                 onValueChange={(value) => void handleSelectConnection(value)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select monday connection" />
+                  <SelectValue placeholder="Select connection" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mondayConnections.map((connection) => (
+                  {connections.map((connection) => (
                     <SelectItem key={connection.id} value={connection.id}>
                       {getConnectionDisplayName(connection)}
                     </SelectItem>
@@ -258,30 +292,64 @@ export function PortalCreateDialog({
         ) : null}
 
         {PORTAL_CREATION_STEPS[currentStepIndex] === "source" ? (
-          <div className="space-y-2">
-            <Label>Choose monday board</Label>
-            {loadingBoards ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Spinner className="size-4" />
-                Loading boards...
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Choose {boardLabel}</Label>
+              {loadingBoards ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Spinner className="size-4" />
+                  Loading {boardLabel}s...
+                </div>
+              ) : (
+                <Select
+                  value={selectedBoardId}
+                  onValueChange={(value) => void handleSelectBoard(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={`Select ${boardLabel}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {boards.map((board) => (
+                      <SelectItem key={board.id} value={board.id}>
+                        {board.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {isLinear && selectedBoardId ? (
+              <div className="space-y-2">
+                <Label>Choose project</Label>
+                {loadingSubBoards ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Spinner className="size-4" />
+                    Loading projects...
+                  </div>
+                ) : subBoards.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No projects found for this team.
+                  </p>
+                ) : (
+                  <Select
+                    value={selectedSubBoardId}
+                    onValueChange={(value) => void handleSelectSubBoard(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subBoards.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
-            ) : (
-              <Select
-                value={selectedBoardId}
-                onValueChange={(value) => void handleSelectBoard(value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select board" />
-                </SelectTrigger>
-                <SelectContent>
-                  {boards.map((board) => (
-                    <SelectItem key={board.id} value={board.id}>
-                      {board.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            ) : null}
           </div>
         ) : null}
 
@@ -291,13 +359,13 @@ export function PortalCreateDialog({
             {loadingColumns ? (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Spinner className="size-4" />
-                Loading board fields...
+                Loading fields...
               </div>
             ) : (
               <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border border-border p-2">
                 {importableColumns.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    No importable fields available for this board.
+                    No importable fields available for this {boardLabel}.
                   </p>
                 ) : (
                   importableColumns.map((column) => (
@@ -409,7 +477,7 @@ export function PortalCreateDialog({
             <div className="rounded-md border border-dashed border-border p-3 text-xs">
               <p className="font-medium text-foreground">Preview summary</p>
               <p className="mt-1 text-muted-foreground">
-                Board: {selectedBoardName}
+                {boardLabel.charAt(0).toUpperCase() + boardLabel.slice(1)}: {selectedBoardName}
               </p>
               <p className="text-muted-foreground">
                 Imported fields: {selectedColumnIds.length}
@@ -434,6 +502,7 @@ export function PortalCreateDialog({
         {saveError ? (
           <p className="text-xs text-destructive">{saveError}</p>
         ) : null}
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={saving}>

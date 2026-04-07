@@ -3,6 +3,7 @@ import { decryptText } from '@/lib/crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { fetchMondayBoardData } from '@/services/monday'
+import { fetchLinearBoardData } from '@/services/linear'
 import { ServiceError } from '@/services/service-error'
 import { logger } from '@/lib/logger'
 import type { PortalBoardData } from '@/types/portal-view'
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
             boardId: string
             boardName: string
             selectedColumnIds: string[]
+            subBoardId?: string | null
+            subBoardName?: string | null
         } | null
 
         if (!importConfig?.boardId || !importConfig.selectedColumnIds?.length) {
@@ -68,17 +71,26 @@ export async function GET(request: NextRequest) {
             throw new ServiceError('Connection not found', 'not_found', 404)
         }
 
-        if (connection.provider !== 'monday') {
-            throw new ServiceError('Only monday connections are currently supported', 'invalid_provider', 400)
-        }
-
         const accessToken = decryptText(connection.access_token_encrypted)
 
-        const boardData: PortalBoardData = await fetchMondayBoardData(
-            accessToken,
-            importConfig.boardId,
-            importConfig.selectedColumnIds
-        )
+        let boardData: PortalBoardData
+
+        if (connection.provider === 'monday') {
+            boardData = await fetchMondayBoardData(
+                accessToken,
+                importConfig.boardId,
+                importConfig.selectedColumnIds
+            )
+        } else if (connection.provider === 'linear') {
+            boardData = await fetchLinearBoardData(
+                accessToken,
+                importConfig.boardId,
+                importConfig.selectedColumnIds,
+                importConfig.subBoardId
+            )
+        } else {
+            throw new ServiceError(`Provider '${connection.provider}' is not supported`, 'invalid_provider', 400)
+        }
 
         return NextResponse.json(boardData)
     } catch (error) {

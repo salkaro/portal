@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PortalItem } from "@/types/portal-view";
 import { getOverdueItems, getUpcomingItems } from "@/utils/portal-view";
 
-type PortalTimelineSectionProps = {
+type PortalTimelineContentProps = {
   items: PortalItem[];
 };
 
@@ -85,7 +85,7 @@ function MilestoneRow({ item, isOverdue }: MilestoneRowProps) {
   );
 }
 
-export function PortalTimelineSection({ items }: PortalTimelineSectionProps) {
+export function PortalTimelineContent({ items }: PortalTimelineContentProps) {
   const overdueItems = getOverdueItems(items);
   const overdueIds = new Set(overdueItems.map((i) => i.id));
   const upcomingItems = getUpcomingItems(items);

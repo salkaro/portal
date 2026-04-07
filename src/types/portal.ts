@@ -6,6 +6,8 @@ export type PortalImportConfig = {
     boardId: string
     boardName: string
     selectedColumnIds: string[]
+    subBoardId?: string | null
+    subBoardName?: string | null
 }
 
 export type PortalCustomization = {
@@ -15,6 +17,12 @@ export type PortalCustomization = {
     showOwnersSection: boolean
     projectOwner: string | null
     organisationName: string | null
+    // Pro branding
+    logoUrl: string | null
+    primaryColor: string | null
+    foregroundColor: string | null
+    hidePoweredBy: boolean
+    hidePdfBranding: boolean
 }
 
 export type Portal = {
@@ -22,7 +30,7 @@ export type Portal = {
     organisation_id: string
     name: string
     slug: string
-    provider: 'monday'
+    provider: string
     connection_id: string
     status: PortalStatus
     access_type: PortalAccessType
@@ -41,4 +49,9 @@ export const DEFAULT_PORTAL_CUSTOMIZATION: PortalCustomization = {
     showOwnersSection: false,
     projectOwner: null,
     organisationName: null,
+    logoUrl: null,
+    primaryColor: null,
+    foregroundColor: null,
+    hidePoweredBy: false,
+    hidePdfBranding: false,
 }

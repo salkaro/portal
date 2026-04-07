@@ -1,19 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, DownloadIcon, Building2, Clock, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LayoutDashboard, ListTodo, GitBranch, Activity } from "lucide-react";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { fetchPortalBoardData, trackPortalPdfExport } from "@/services/portals";
 import { exportPortalPdf } from "@/lib/export-portal-pdf";
-import { PortalBoardSkeleton } from "@/components/app/portals/view/portal-board-skeleton";
-import { PortalStatCards } from "@/components/app/portals/view/portal-stat-cards";
-import { PortalStatusBreakdown } from "@/components/app/portals/view/portal-status-breakdown";
-import { PortalTimelineSection } from "@/components/app/portals/view/portal-timeline-section";
-import { PortalOwnersSection } from "@/components/app/portals/view/portal-owners-section";
-import { PortalItemsTable } from "@/components/app/portals/view/monday/portal-items-table";
-import { PortalActivityFeed } from "@/components/app/portals/view/portal-activity-feed";
-import { getCompletionStats } from "@/utils/portal-view";
+import { PortalBoardSkeleton } from "@/components/app/portals/view/shared/portal-board-skeleton";
+import { PortalSidebar } from "@/components/app/portals/view/layout/portal-sidebar";
+import { PortalTopbar } from "@/components/app/portals/view/layout/portal-topbar";
+import { PortalOverviewSection } from "@/components/app/portals/view/sections/portal-overview-section";
+import { PortalTasksSection } from "@/components/app/portals/view/sections/portal-tasks-section";
+import { PortalTimelineSection } from "@/components/app/portals/view/sections/portal-timeline-section";
+import { PortalActivitySection } from "@/components/app/portals/view/sections/portal-activity-section";
+import { Button } from "@/components/ui/button";
+import { useOrganisation } from "@/hooks/use-organisation";
+import { PLANS } from "@/constants/plans";
 import type { PortalBoardData } from "@/types/portal-view";
+
+export type NavSection = "overview" | "tasks" | "timeline" | "activity";
 
 type PortalCustomization = {
   tagline: string | null;
@@ -22,6 +26,11 @@ type PortalCustomization = {
   showOwnersSection: boolean;
   projectOwner?: string | null;
   organisationName?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  foregroundColor?: string | null;
+  hidePoweredBy?: boolean;
+  hidePdfBranding?: boolean;
 };
 
 type PortalBoardViewProps = {
@@ -43,68 +52,13 @@ function timeAgo(date: Date): string {
 
 function useTimeAgo(date: Date | null): string {
   const [tick, setTick] = useState(0);
-
   useEffect(() => {
     if (!date) return;
-    const id = setInterval(() => setTick((value) => value + 1), 60_000);
+    const id = setInterval(() => setTick((v) => v + 1), 60_000);
     return () => clearInterval(id);
   }, [date]);
-
   void tick;
   return date ? timeAgo(date) : "";
-}
-
-function ProgressHero({
-  donePercent,
-  done,
-  total,
-}: {
-  donePercent: number;
-  done: number;
-  total: number;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-      <div className="mb-4 flex items-end justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Project Progress
-          </p>
-          <p className="mt-1 text-3xl font-bold tabular-nums">{donePercent}%</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {done} of {total} task{total !== 1 ? "s" : ""} complete
-          </p>
-        </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            donePercent === 100
-              ? "bg-green-500/10 text-green-600"
-              : donePercent >= 50
-                ? "bg-blue-500/10 text-blue-600"
-                : "bg-amber-500/10 text-amber-600"
-          }`}
-        >
-          {donePercent === 100
-            ? "Complete"
-            : donePercent >= 50
-              ? "On Track"
-              : "In Progress"}
-        </span>
-      </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${
-            donePercent === 100
-              ? "bg-green-500"
-              : donePercent >= 50
-                ? "bg-blue-500"
-                : "bg-amber-500"
-          }`}
-          style={{ width: `${donePercent}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 export function PortalBoardView({
@@ -112,34 +66,47 @@ export function PortalBoardView({
   portalName,
   customization,
 }: PortalBoardViewProps) {
+  const { organisation } = useOrganisation();
+  const isPro = organisation?.subscription === PLANS.PRO;
+
   const [data, setData] = useState<PortalBoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [activeSection, setActiveSection] = useState<NavSection>("overview");
   const lastUpdatedLabel = useTimeAgo(lastUpdated);
+
+  const showTimeline = customization?.showTimelineSection ?? true;
+  const showStatus = customization?.showStatusSection ?? true;
+
+  const navItems: { id: NavSection; label: string; icon: React.ElementType }[] = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "tasks", label: "Tasks", icon: ListTodo },
+    ...(showTimeline ? [{ id: "timeline" as NavSection, label: "Timeline", icon: GitBranch }] : []),
+    { id: "activity", label: "Activity", icon: Activity },
+  ];
+
+  const activeSectionLabel = navItems.find((n) => n.id === activeSection)?.label ?? "";
 
   const load = useCallback(
     async (isRefresh = false) => {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
       setError(null);
-
       try {
         const boardData = await fetchPortalBoardData(portalId);
         setData(boardData);
         setLastUpdated(new Date());
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Unable to load portal data",
-        );
+        setError(err instanceof Error ? err.message : "Unable to load portal data");
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [portalId],
+    [portalId]
   );
 
   useEffect(() => {
@@ -149,25 +116,20 @@ export function PortalBoardView({
   async function handleExport() {
     if (!data) return;
     setExporting(true);
-
     try {
-      await exportPortalPdf(portalName, customization ?? null, data);
+      await exportPortalPdf(portalName, customization ?? null, data, isPro);
       await trackPortalPdfExport(portalId);
     } finally {
       setExporting(false);
     }
   }
 
-  if (loading) {
-    return <PortalBoardSkeleton />;
-  }
+  if (loading) return <PortalBoardSkeleton />;
 
   if (error || !data) {
     return (
       <div className="space-y-3 py-6">
-        <p className="text-sm text-destructive">
-          {error ?? "No data available."}
-        </p>
+        <p className="text-sm text-destructive">{error ?? "No data available."}</p>
         <Button variant="outline" size="sm" onClick={() => void load()}>
           Try again
         </Button>
@@ -175,116 +137,48 @@ export function PortalBoardView({
     );
   }
 
-  const showStatus = customization?.showStatusSection ?? true;
-  const showTimeline = customization?.showTimelineSection ?? true;
-  const showOwners = customization?.showOwnersSection ?? false;
-
-  const { total, done, donePercent } = getCompletionStats(data.items);
-  const projectOwner = customization?.projectOwner;
-  const organisationName = customization?.organisationName;
-
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-3">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{portalName}</h1>
-            {customization?.tagline && (
-              <p className="mt-1.5 text-base text-muted-foreground">
-                {customization.tagline}
-              </p>
-            )}
-          </div>
+    <SidebarProvider>
+      <PortalSidebar
+        portalName={portalName}
+        tagline={customization?.tagline}
+        projectOwner={customization?.projectOwner}
+        organisationName={customization?.organisationName}
+        lastUpdatedLabel={lastUpdated ? lastUpdatedLabel : undefined}
+        logoUrl={customization?.logoUrl}
+        primaryColor={customization?.primaryColor}
+        foregroundColor={customization?.foregroundColor}
+        hidePoweredBy={customization?.hidePoweredBy}
+        activeSection={activeSection}
+        navItems={navItems}
+        onSectionChange={setActiveSection}
+      />
 
-          {/* Metadata row */}
-          {(projectOwner || organisationName || lastUpdated) && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-              {projectOwner && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <User className="size-3.5 shrink-0" />
-                  <span>
-                    <span className="text-muted-foreground/60">
-                      Project Owner:
-                    </span>{" "}
-                    <span className="font-medium text-foreground">
-                      {projectOwner}
-                    </span>
-                  </span>
-                </div>
-              )}
-              {lastUpdated && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Clock className="size-3.5 shrink-0" />
-                  <span>
-                    <span className="text-muted-foreground/60">
-                      Last Updated:
-                    </span>{" "}
-                    <span className="font-medium text-foreground">
-                      {lastUpdatedLabel}
-                    </span>
-                  </span>
-                </div>
-              )}
-              {organisationName && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Building2 className="size-3.5 shrink-0" />
-                  <span>
-                    <span className="text-muted-foreground/60">Agency:</span>{" "}
-                    <span className="font-medium text-foreground">
-                      {organisationName}
-                    </span>
-                  </span>
-                </div>
-              )}
-            </div>
+      <SidebarInset>
+        <PortalTopbar
+          activeSectionLabel={activeSectionLabel}
+          refreshing={refreshing}
+          exporting={exporting}
+          canExport={isPro}
+          onRefresh={() => void load(true)}
+          onExport={() => void handleExport()}
+        />
+
+        <main className="flex-1 overflow-y-auto p-6">
+          {activeSection === "overview" && (
+            <PortalOverviewSection items={data.items} showStatus={showStatus} />
           )}
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void handleExport()}
-            disabled={exporting || refreshing}
-          >
-            <DownloadIcon
-              className={`size-3.5 ${exporting ? "animate-pulse" : ""}`}
-            />
-            {exporting ? "Exporting..." : "Export PDF"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void load(true)}
-            disabled={refreshing}
-          >
-            <RefreshCw
-              className={`size-3.5 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Progress hero */}
-      <ProgressHero donePercent={donePercent} done={done} total={total} />
-
-      {/* Stat cards — always shown */}
-      <PortalStatCards items={data.items} />
-
-      {/* Conditional sections */}
-      {showStatus && <PortalStatusBreakdown items={data.items} />}
-
-      {showTimeline && <PortalTimelineSection items={data.items} />}
-
-      {showOwners && <PortalOwnersSection items={data.items} />}
-
-      {/* Items table — always shown */}
-      <PortalItemsTable columns={data.columns} items={data.items} />
-
-      {/* Activity feed */}
-      <PortalActivityFeed items={data.items} />
-    </div>
+          {activeSection === "tasks" && (
+            <PortalTasksSection columns={data.columns} items={data.items} />
+          )}
+          {activeSection === "timeline" && showTimeline && (
+            <PortalTimelineSection items={data.items} />
+          )}
+          {activeSection === "activity" && (
+            <PortalActivitySection items={data.items} />
+          )}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

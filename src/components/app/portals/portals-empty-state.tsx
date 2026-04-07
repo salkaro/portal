@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type PortalsEmptyStateProps = {
-  hasMondayConnections: boolean;
+  hasConnections: boolean;
   onCreatePortal: () => void;
   atLimit?: boolean;
   limitLabel?: string;
 };
 
 export function PortalsEmptyState({
-  hasMondayConnections,
+  hasConnections,
   onCreatePortal,
   atLimit = false,
   limitLabel,
@@ -26,7 +26,7 @@ export function PortalsEmptyState({
         No portals created yet
       </p>
       <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-        Create your first client portal and map monday board data into a
+        Create your first client portal and map your project data into a
         branded, shareable experience.
       </p>
 
@@ -43,11 +43,11 @@ export function PortalsEmptyState({
         ) : (
           <Button onClick={onCreatePortal}>Create portal</Button>
         )}
-        {!hasMondayConnections ? (
+        {!hasConnections ? (
           <Button variant="outline" asChild>
             <Link href="/integrations/browse">
               <LinkIcon className="size-4" />
-              Connect monday first
+              Connect an integration first
             </Link>
           </Button>
         ) : null}

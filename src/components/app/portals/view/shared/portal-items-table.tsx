@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SalkaroTable, type SalkaroColumn } from "@/components/ui/salkaro-table";
 import type { PortalColumn, PortalItem } from "@/types/portal-view";
 import { getCompletionStats } from "@/utils/portal-view";
-import { PortalItemDrawer } from "@/components/app/portals/view/monday/portal-item-drawer";
+import { PortalItemDrawer } from "@/components/app/portals/view/shared/portal-item-drawer";
 
 type PortalItemsTableProps = {
   columns: PortalColumn[];
@@ -78,12 +78,10 @@ type GroupTableProps = {
 function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProps) {
   const { donePercent } = getCompletionStats(items);
 
-  console.log(items)
-
-  // Identify the client-relevant columns: status, date/timeline, people
   const statusCol = columns.find((c) => c.type === "status");
   const dateCol = columns.find((c) => c.type === "date" || c.type === "timeline");
   const ownerCol = columns.find((c) => c.type === "people");
+  const labelsCol = columns.find((c) => c.type === "labels");
 
   const tableColumns: SalkaroColumn<PortalItem>[] = [
     {
@@ -92,7 +90,7 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
       className: "min-w-[200px]",
       render: (item) => (
         <div className="font-medium text-xs">
-          {item.name}
+          <span className="block max-w-sm truncate" title={item.name}>{item.name}</span>
           <SubitemProgress item={item} />
         </div>
       ),
@@ -163,6 +161,33 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
           },
         ]
       : []),
+    ...(labelsCol
+      ? [
+          {
+            key: labelsCol.id,
+            label: "Labels",
+            className: "w-40",
+            render: (item: PortalItem) => {
+              const cv = item.columnValues.find((v) => v.columnId === labelsCol.id);
+              if (!cv?.text) return <span className="text-xs text-muted-foreground">—</span>;
+              const labels = cv.text.split(",").map((l) => l.trim()).filter(Boolean);
+              return (
+                <div className="flex flex-wrap gap-1">
+                  {labels.map((label) => (
+                    <Badge key={label} variant="outline" className="text-[0.625rem]">
+                      {label}
+                    </Badge>
+                  ))}
+                </div>
+              );
+            },
+            searchValue: (item: PortalItem) => {
+              const cv = item.columnValues.find((v) => v.columnId === labelsCol.id);
+              return cv?.text ?? "";
+            },
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -196,7 +221,6 @@ function GroupTable({ groupTitle, items, columns, onSelectItem }: GroupTableProp
 export function PortalItemsTable({ columns, items }: PortalItemsTableProps) {
   const [selectedItem, setSelectedItem] = useState<PortalItem | null>(null);
 
-  // Preserve Monday's group order by using first-seen insertion order
   const groupOrder: string[] = [];
   const groupMap = new Map<string, { title: string; items: PortalItem[] }>();
   for (const item of items) {

@@ -40,8 +40,10 @@ export function PortalsContent() {
   }, [refetchPortals, refetchConnections]);
   const { refresh, refreshing, disabled: refreshDisabled } = useRefreshCooldown(handleRefresh);
 
-  const mondayConnections = useMemo(() => {
-    return connections.filter((connection) => connection.provider === "monday");
+  const enabledConnections = useMemo(() => {
+    return connections.filter((connection) =>
+      ["monday", "linear"].includes(connection.provider)
+    );
   }, [connections]);
 
   const portalLimit = organisation
@@ -107,7 +109,7 @@ export function PortalsContent() {
       )}
       {portals.length === 0 ? (
         <PortalsEmptyState
-          hasMondayConnections={mondayConnections.length > 0}
+          hasConnections={enabledConnections.length > 0}
           onCreatePortal={() => setCreateDialogOpen(true)}
           atLimit={atLimit}
           limitLabel={limitLabel}
@@ -124,7 +126,7 @@ export function PortalsContent() {
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
           organisationId={organisation.id}
-          mondayConnections={mondayConnections}
+          connections={enabledConnections}
           onCreated={handleRefetchAfterCreate}
         />
       ) : null}

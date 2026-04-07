@@ -19,7 +19,7 @@ export async function BillingContent() {
     const isFreePlan = currentPlan === PLANS.FREE;
 
     const stripeStatus = !isFreePlan && organisation?.stripe_customer_id
-        ? await getSubscriptionStatus({ customerId: organisation.stripe_customer_id })
+        ? await getSubscriptionStatus({ customerId: organisation.stripe_customer_id }).catch(() => null)
         : null;
 
     const cancelling = stripeStatus?.cancelAtPeriodEnd ?? false;
@@ -41,7 +41,7 @@ export async function BillingContent() {
         : process.env.STRIPE_PRICE_ID_PRO_YEARLY_TEST ?? null;
 
     const invoices = organisation?.stripe_customer_id
-        ? await getInvoices({ customerId: organisation.stripe_customer_id })
+        ? await getInvoices({ customerId: organisation.stripe_customer_id }).catch(() => [])
         : [];
 
     return (

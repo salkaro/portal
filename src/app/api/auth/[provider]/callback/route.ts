@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { ROUTES } from '@/constants/routes'
 import { logger } from '@/lib/logger'
 import { fetchMondayAccountIdentity } from '@/services/monday'
+import { fetchLinearAccountIdentity } from '@/services/linear'
 import {
     exchangeOAuthCodeForToken,
     getAuthenticatedOrganisationContextOrThrow,
@@ -16,7 +17,8 @@ export async function GET(
     context: { params: Promise<{ provider: string }> }
 ) {
     const { provider } = await context.params
-    const redirectUrl = new URL(ROUTES.INTEGRATIONS, request.url)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin
+    const redirectUrl = new URL(ROUTES.INTEGRATIONS, appUrl)
 
     try {
         const config = getOAuthProviderConfig(provider)
@@ -62,6 +64,26 @@ export async function GET(
                     identityError instanceof ServiceError
                         ? identityError.message
                         : 'Unable to fetch monday account identity'
+
+                logger.warn('integration.oauth.identity_lookup_failed', { provider, reason }, user.id)
+            }
+        } else if (config.provider === 'linear') {
+            try {
+                const identity = await fetchLinearAccountIdentity(token.access_token)
+                externalAccountId = identity.organizationId ?? identity.userId
+                metadata = {
+                    integrationDisplayName:
+                        identity.organizationName?.trim() ||
+                        (identity.organizationId ? `Linear workspace ${identity.organizationId}` : null),
+                    linearUserId: identity.userId,
+                    linearOrganizationId: identity.organizationId,
+                    linearOrganizationName: identity.organizationName,
+                }
+            } catch (identityError) {
+                const reason =
+                    identityError instanceof ServiceError
+                        ? identityError.message
+                        : 'Unable to fetch Linear account identity'
 
                 logger.warn('integration.oauth.identity_lookup_failed', { provider, reason }, user.id)
             }
