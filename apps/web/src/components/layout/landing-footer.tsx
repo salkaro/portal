@@ -37,6 +37,9 @@ export function LandingFooter() {
             <Link href="#faq" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </Link>
+            <Link href="/blog" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Blog
+            </Link>
           </nav>
 
           {/* Legal */}

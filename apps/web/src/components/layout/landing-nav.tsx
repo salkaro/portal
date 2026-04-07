@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: "Demo", href: "#demo" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL ?? "https://portal.salkaro.com";

@@ -82,7 +82,7 @@ export function FeaturesSection() {
             Everything your clients need. Nothing they don&apos;t.
           </h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Built specifically for agency–client relationships — not repurposed project management software.
+            Built specifically for agency-client relationships — not repurposed project management software.
           </p>
         </div>
 
