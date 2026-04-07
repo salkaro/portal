@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://portals.salkaro.com
+
+# Sitemaps
+Sitemap: https://portals.salkaro.com/sitemap.xml

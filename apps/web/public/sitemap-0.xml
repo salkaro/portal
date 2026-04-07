@@ -1,4 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://portals.salkaro.com</loc><lastmod>2026-04-07T19:36:49.851Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000</loc><lastmod>2026-04-07T20:29:40.285Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/affordable-client-portal-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/best-client-portal-for-consultants</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/best-client-portal-for-freelancers</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/best-client-portal-software-2026</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/best-client-portal-software-for-agencies</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/best-white-label-client-portal-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-examples</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-accountants</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-agencies-complete-guide</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-consulting-firms</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-freelancers-guide</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-law-firms</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-marketing-agencies</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-saas-companies</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-for-web-development-agencies</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-software-for-small-businesses</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-crm-systems</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-email</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-intranet</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-project-dashboards</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-project-management-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/client-portal-vs-shared-google-drive</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/free-client-portal-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/how-to-create-a-client-portal</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/how-to-reduce-client-emails</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/monday-com-vs-linear-for-agencies</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/secure-client-portal-for-file-sharing</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/secure-client-portal-software-for-businesses</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/simple-client-portal-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/what-is-a-client-portal</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/white-label-client-portal-software</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/blog/why-agencies-need-a-client-portal</loc><lastmod>2026-04-07T20:29:40.291Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>

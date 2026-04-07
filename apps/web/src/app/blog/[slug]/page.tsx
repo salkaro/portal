@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeftIcon, CalendarIcon, ClockIcon, TagIcon } from "lucide-react";
-import { serialize } from "next-mdx-remote/serialize";
-import remarkGfm from "remark-gfm";
 import { getAllPosts, getPost } from "@/lib/blog";
 import { MdxContent } from "@/components/blog/mdx-content";
 import { PostCard } from "@/components/blog/post-card";
@@ -36,10 +34,6 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
-
-  const mdxSource = await serialize(post.content, {
-    mdxOptions: { remarkPlugins: [remarkGfm] },
-  });
 
   // Related: other posts sharing at least one tag, excluding current
   const allPosts = getAllPosts();
@@ -110,7 +104,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           {/* MDX body */}
           <div className="max-w-2xl">
-            <MdxContent source={mdxSource} />
+            <MdxContent source={post.content} />
           </div>
         </article>
 

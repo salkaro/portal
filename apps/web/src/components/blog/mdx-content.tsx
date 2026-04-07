@@ -1,6 +1,5 @@
-"use client";
-
-import { MDXRemote, type MDXRemoteSerializeResult } from "next-mdx-remote";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
 
 const components = {
   h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -74,6 +73,12 @@ const components = {
   ),
 };
 
-export function MdxContent({ source }: { source: MDXRemoteSerializeResult }) {
-  return <MDXRemote {...source} components={components} />;
+export function MdxContent({ source }: { source: string }) {
+  return (
+    <MDXRemote
+      source={source}
+      components={components}
+      options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+    />
+  );
 }
