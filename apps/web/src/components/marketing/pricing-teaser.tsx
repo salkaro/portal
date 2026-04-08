@@ -51,7 +51,7 @@ export function PricingTeaser() {
             <div className="p-5" />
             <div className="p-5 border-l border-border text-center">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Free</div>
-              <div className="text-2xl font-bold">£0</div>
+              <div className="text-2xl font-bold">$0</div>
               <div className="text-xs text-muted-foreground mt-0.5">Forever free</div>
             </div>
             <div className="p-5 border-l border-border text-center bg-primary/5">
