@@ -60,7 +60,7 @@ const OAUTH_PROVIDER_CONFIG: Record<IntegrationProvider, OAuthProviderConfig> = 
         provider: 'linear',
         authUrl: 'https://linear.app/oauth/authorize',
         tokenUrl: 'https://api.linear.app/oauth/token',
-        scopes: ['read'],
+        scopes: ['read', 'offline_access'],
         clientIdEnv: 'LINEAR_CLIENT_ID',
         clientSecretEnv: 'LINEAR_CLIENT_SECRET',
     },
@@ -203,6 +203,39 @@ export async function getAuthenticatedOrganisationContextOrThrow(
         organisationId: data.organisation_id,
         role: data.role,
     }
+}
+
+export async function refreshOAuthToken(
+    providerInput: string,
+    refreshToken: string,
+): Promise<OAuthTokenResponse> {
+    const config = getOAuthProviderConfig(providerInput)
+    const clientId = getRequiredEnv(config.clientIdEnv)
+    const clientSecret = getRequiredEnv(config.clientSecretEnv)
+
+    const body = new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret,
+    })
+
+    const response = await fetch(config.tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+    })
+
+    if (!response.ok) {
+        throw new ServiceError('Token refresh failed', 'upstream_error', response.status)
+    }
+
+    const tokenPayload = (await response.json()) as OAuthTokenResponse
+    if (!tokenPayload.access_token) {
+        throw new ServiceError('Token refresh response missing access_token', 'upstream_error', 502)
+    }
+
+    return tokenPayload
 }
 
 export async function upsertConnectedAccount(input: {

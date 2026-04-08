@@ -45,6 +45,13 @@ async function linearGraphql<TData>(accessToken: string, query: string, variable
     })
 
     if (!response.ok) {
+        if (response.status === 401) {
+            throw new ServiceError(
+                'Linear authentication failed. Please reconnect the integration.',
+                'forbidden',
+                403
+            )
+        }
         throw new ServiceError('Linear API request failed', 'upstream_error', response.status)
     }
 

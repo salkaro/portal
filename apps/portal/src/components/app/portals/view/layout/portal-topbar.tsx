@@ -4,11 +4,6 @@ import { RefreshCw, DownloadIcon } from "lucide-react";
 import { Button } from "@salkaro/ui";
 import { SidebarTrigger } from "@salkaro/ui";
 import { Separator } from "@salkaro/ui";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@salkaro/ui";
 
 type PortalTopbarProps = {
   activeSectionLabel: string;

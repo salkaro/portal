@@ -1,12 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { decryptText } from '@/lib/crypto'
+import { decryptText, encryptText } from '@/lib/crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { fetchMondayBoardData } from '@/services/monday'
 import { fetchLinearBoardData } from '@/services/linear'
+import { refreshOAuthToken } from '@/services/oauth'
 import { ServiceError } from '@/services/service-error'
 import { logger } from '@/lib/logger'
 import type { PortalBoardData } from '@/types/portal-view'
+
+// Refresh the token if it expires within the next 5 minutes
+const EXPIRY_BUFFER_MS = 5 * 60 * 1000
 
 export async function GET(request: NextRequest) {
     try {
@@ -59,9 +63,15 @@ export async function GET(request: NextRequest) {
 
         const { data: connection, error: connectionError } = await serviceClient
             .from('connected_accounts')
-            .select('access_token_encrypted, provider')
+            .select('id, access_token_encrypted, refresh_token_encrypted, token_expires_at, provider')
             .eq('id', connectionId)
-            .maybeSingle<{ access_token_encrypted: string; provider: string }>()
+            .maybeSingle<{
+                id: string
+                access_token_encrypted: string
+                refresh_token_encrypted: string | null
+                token_expires_at: string | null
+                provider: string
+            }>()
 
         if (connectionError) {
             throw new ServiceError(connectionError.message, 'database_error', 500)
@@ -71,7 +81,42 @@ export async function GET(request: NextRequest) {
             throw new ServiceError('Connection not found', 'not_found', 404)
         }
 
-        const accessToken = decryptText(connection.access_token_encrypted)
+        // Refresh the access token if it has expired or is about to
+        const isExpired =
+            connection.token_expires_at !== null &&
+            new Date(connection.token_expires_at).getTime() - Date.now() < EXPIRY_BUFFER_MS
+
+        let accessToken = decryptText(connection.access_token_encrypted)
+
+        if (isExpired && connection.refresh_token_encrypted) {
+            try {
+                const refreshToken = decryptText(connection.refresh_token_encrypted)
+                const refreshed = await refreshOAuthToken(connection.provider, refreshToken)
+
+                const newExpiresAt =
+                    typeof refreshed.expires_in === 'number'
+                        ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
+                        : null
+
+                await serviceClient
+                    .from('connected_accounts')
+                    .update({
+                        access_token_encrypted: encryptText(refreshed.access_token),
+                        refresh_token_encrypted: refreshed.refresh_token
+                            ? encryptText(refreshed.refresh_token)
+                            : connection.refresh_token_encrypted,
+                        token_expires_at: newExpiresAt,
+                    })
+                    .eq('id', connection.id)
+
+                accessToken = refreshed.access_token
+                logger.info('integration.token.refreshed', { provider: connection.provider })
+            } catch (refreshError) {
+                const reason = refreshError instanceof ServiceError ? refreshError.message : 'unknown'
+                logger.warn('integration.token.refresh_failed', { provider: connection.provider, reason })
+                // Fall through with the existing token — it may still work or fail with a clear auth error
+            }
+        }
 
         let boardData: PortalBoardData
 

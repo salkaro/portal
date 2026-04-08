@@ -14,6 +14,7 @@ export default async function PortalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  console.log(id)
   return (
     <PageGuard requiredPlan="free" skeleton={<PortalsSkeleton />}>
       <PortalDetailContent portalId={id} />
