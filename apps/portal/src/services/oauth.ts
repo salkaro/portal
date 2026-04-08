@@ -60,7 +60,7 @@ const OAUTH_PROVIDER_CONFIG: Record<IntegrationProvider, OAuthProviderConfig> = 
         provider: 'linear',
         authUrl: 'https://linear.app/oauth/authorize',
         tokenUrl: 'https://api.linear.app/oauth/token',
-        scopes: ['read', 'offline_access'],
+        scopes: ['read'],
         clientIdEnv: 'LINEAR_CLIENT_ID',
         clientSecretEnv: 'LINEAR_CLIENT_SECRET',
     },
@@ -108,7 +108,8 @@ export function buildOAuthAuthorizeUrl(providerInput: string, state: string): st
     url.searchParams.set('state', state)
 
     if (config.scopes.length) {
-        url.searchParams.set('scope', config.scopes.join(' '))
+        const separator = config.provider === 'linear' ? ',' : ' '
+        url.searchParams.set('scope', config.scopes.join(separator))
     }
 
     return url.toString()
